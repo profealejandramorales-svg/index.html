@@ -167,16 +167,16 @@
 
         // --- Variables de entorno proporcionadas por el Canvas ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyAFp6biz1UTr9Ehaudkpe7QyTFVbdQz5Sc",
   authDomain: "asistencia-mi-clase.firebaseapp.com",
   projectId: "asistencia-mi-clase",
-  storageBucket: "asistencia-mi-clase.appspot.com",
+  storageBucket: "asistencia-mi-clase.firebasestorage.app",
   messagingSenderId: "552398254230",
   appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7",
   measurementId: "G-MYR01HM1YE"
-};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+}; 
+ const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         // --- Application State ---
         let app, db, auth;
