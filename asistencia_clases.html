@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Asistencia y Calificaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        /* Estilos específicos para la impresión */
+        @media print {
+            body { background-color: #fff; }
+            .no-print { display: none !important; }
+            .printable-container {
+                display: block !important; width: 100% !important; position: absolute;
+                top: 0; left: 0; margin: 0 !important; padding: 1rem !important;
+                box-shadow: none !important; border: none !important;
+            }
+            .printable-container h1, .printable-container h2 { text-align: center; margin-bottom: 1rem; }
+            .printable-container table { width: 100%; page-break-inside: auto; }
+            .printable-container tr { page-break-inside: avoid; page-break-after: auto; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-5xl w-full">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center no-print">Control de Asistencia y Calificaciones</h1>
+        <p class="text-gray-500 mb-6 text-center no-print">Gestión de estudiantes, notas, asistencia y observaciones.</p>
+        <p id="currentDate" class="text-gray-600 text-center mb-6 no-print"></p>
+
+        <div class="no-print text-center mb-4">
+            <p class="text-sm text-gray-500">
+                <span id="userIdDisplay" class="font-mono text-blue-600 font-semibold break-all">Cargando...</span>
+                <br>
+                <span id="statusDisplay" class="text-xs font-medium mt-1"></span>
+            </p>
+        </div>
+
+        <div class="no-print mb-8 space-y-4 md:space-y-0 md:flex md:justify-between md:items-end">
+            <div class="flex-1 mr-4">
+                <label for="classSelector" class="block text-gray-700 font-semibold mb-2">Seleccionar Clase</label>
+                <select id="classSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></select>
+            </div>
+            
+            <div class="flex-1 mr-4">
+                <label for="dateSelector" class="block text-gray-700 font-semibold mb-2">Seleccionar Fecha</label>
+                <input type="date" id="dateSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+            </div>
+            
+            <div class="flex-1 md:flex-none md:w-auto md:ml-4">
+                <label for="studentNameInput" class="block text-gray-700 font-semibold mb-2">Agregar Estudiante</label>
+                <div class="flex">
+                    <input type="text" id="studentNameInput" placeholder="Ej: Juan Pérez" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    <button id="addStudentBtn" class="ml-2 bg-green-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-md hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="studentsTableContainer" class="min-h-[200px] flex items-center justify-center printable-container">
+            <div id="loadingIndicator" class="text-gray-500 text-center flex flex-col items-center gap-2">
+                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p>Cargando datos...</p>
+            </div>
+        </div>
+
+        <div class="no-print mt-8 text-center space-y-4 md:space-y-0 md:flex md:justify-center md:space-x-4">
+            <button id="printCurrentViewBtn" class="w-full md:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 transition-colors">Imprimir Lista Actual</button>
+            <button id="generateReportBtn" class="w-full md:w-auto bg-purple-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-purple-700 transition-colors">Generar Reporte General</button>
+        </div>
+
+        <div id="classReportContainer" class="hidden mt-8 printable-container">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Resumen de Clases</h2>
+            <div id="classReportContent"></div>
+            <div class="text-center mt-4 no-print">
+                <button id="printReportBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700">Imprimir Reporte</button>
+                <button id="hideReportBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600">Volver a la tabla</button>
+            </div>
+        </div>
+
+        <div id="classDetailsContainer" class="hidden mt-8 printable-container">
+            <h2 id="classDetailsTitle" class="text-2xl font-bold text-gray-800 mb-4 text-center"></h2>
+            <div id="classDetailsContent"></div>
+            <div class="text-center mt-4 no-print">
+                <button id="printDetailsBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700">Imprimir Detalle</button>
+                <button id="backToReportBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600">Volver al Resumen</button>
+            </div>
+        </div>
+        
+        <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="modalTitle" class="text-xl font-bold text-gray-800">Observaciones para...</h2>
+                    <button id="closeObservationModalBtn" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+                </div>
+                <textarea id="observationTextarea" rows="4" placeholder="Escribe tus observaciones aquí..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                <button id="saveObservationBtn" class="mt-4 w-full bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors">Guardar</button>
+            </div>
+        </div>
+
+        <div id="messageModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="messageTitle" class="text-xl font-bold text-gray-800"></h2>
+                    <button id="closeMessageModalBtn" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+                </div>
+                <p id="messageContent" class="text-gray-600 mb-4"></p>
+                <div id="messageButtons" class="flex justify-end gap-2">
+                    <button id="confirmBtn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hidden">Confirmar</button>
+                    <button id="cancelBtn" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg hidden">Cancelar</button>
+                    <button id="okBtn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hidden">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFp6biz1UTr9Ehaudkpe7QyTFVbdQz5Sc",
+            authDomain: "asistencia-mi-clase.firebaseapp.com",
+            projectId: "asistencia-mi-clase",
+            storageBucket: "asistencia-mi-clase.appspot.com",
+            messagingSenderId: "552398254230",
+            appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7",
+            measurementId: "G-MYR01HM1YE"
+        };
+        const appId = firebaseConfig.appId;
+        
+        // **NUEVA FUNCIÓN DE FECHA LOCAL (CORRECCIÓN CRÍTICA DE HORA)**
+        function getLocalISODate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Estado de la aplicación
+        let app, db, auth;
+        let isFirebaseConnected = false;
+        const today = new Date();
+        const todayString = getLocalISODate(today); // Usa la fecha local
+        let currentDateString = todayString;
+        let allClassesData = {};
+        let currentClass = null;
+        let students = [];
+        let userId;
+        let currentStudentIndex = -1;
+
+        // Referencias DOM
+        const studentNameInput = document.getElementById('studentNameInput');
+        const addStudentBtn = document.getElementById('addStudentBtn');
+        const studentsTableContainer = document.getElementById('studentsTableContainer');
+        const currentDateDisplay = document.getElementById('currentDate');
+        const observationModal = document.getElementById('observationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const observationTextarea = document.getElementById('observationTextarea');
+        const saveObservationBtn = document.getElementById('saveObservationBtn');
+        const closeObservationModalBtn = document.getElementById('closeObservationModalBtn');
+        const classSelector = document.getElementById('classSelector');
+        const dateSelector = document.getElementById('dateSelector');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const messageModal = document.getElementById('messageModal');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageContent = document.getElementById('messageContent');
+        const okBtn = document.getElementById('okBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const closeMessageModalBtn = document.getElementById('closeMessageModalBtn');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        const classReportContainer = document.getElementById('classReportContainer');
+        const classReportContent = document.getElementById('classReportContent');
+        const classDetailsContainer = document.getElementById('classDetailsContainer');
+        const classDetailsTitle = document.getElementById('classDetailsTitle');
+        const classDetailsContent = document.getElementById('classDetailsContent');
+        const printCurrentViewBtn = document.getElementById('printCurrentViewBtn');
+        const printReportBtn = document.getElementById('printReportBtn');
+        const printDetailsBtn = document.getElementById('printDetailsBtn');
+        const hideReportBtn = document.getElementById('hideReportBtn');
+        const backToReportBtn = document.getElementById('backToReportBtn');
+
+        // Datos Iniciales (si no hay datos en Firebase)
+        const initialClassData = {
+            'Primero Medio A': ['ALBURQUENQUE DEL GRECCO EMILYA ANTONIA', 'ANABALÓN BELTRÁN BENJAMÍN NICOLÁS', 'CONTRERAS SALGADO HADEEY ALEJANDRA', 'FERRADA ALBORNOZ AGUSTÍN ALEXIS', 'HERNÁNDEZ FERNÁNDEZ DHARIEN ALEXSANDER', 'IBÁÑEZ GONZÁLEZ FERNANDA MAGDALENA', 'LAGOS LASTRA ALEXANDRA DANAE', 'LÓPEZ LÓPEZ LUCIANO ANTONIO', 'MALDONADO FLORES ANTONELLA BELÉN', 'MARIN MARÍN IGNACIO ANTONIO', 'MONTECINO DÍAZ VALESKA BELÉN', 'MUÑOZ CONTRERZ LUIS GABRIEL', 'MUÑOZ LUNA ROGER JOEL', 'NAVARRO VILLANUEVA KARLA PAZ', 'ORELLANA ARRIAGADA SEBASTIÁN ANDRÉS', 'QUEZADA NARANJO FELIPE ALONSO', 'QUINTEROS VERGARA FERNANDA FLORENCIA', 'RAMÍREZ VILLALOBOS DUVAN EMILIO', 'SANTANDER LÓPEZ MARÍA JOSÉ', 'TAPIA CASTILLA JEANFRANCO PATRICK', 'URBINA CÁCERES FRANCHESCA POULETTE', 'VÁSQUEZ ZALDUENDO AMANDA ISABEL', 'ZABALAGA COFRÉ DAMIÁN ANDRÉS', 'BAEZ DONOSO LUKAS ALFONSO', 'MESA DÍAZ GONZALO IGNACIO', 'BAREA SALGADO SERGIO ALEXANDER'],
+            'Primero Medio B': ['ARAYA DOMÍNGUEZ NOEMÍ JESÚS DE LAS ESTRELLAS', 'ASTUDILLO CAMPOS CRISTÓBAL ANTONIO', 'ASTUDILLO VÁSQUEZ BRUNO FERNANDO LEÓN', 'CASTILLO MUÑOZ RENÉ ANTONIO', 'CID CERDA MARÍA EVANGELINA', 'CUMINAO VIDAL CATALINA ANDREA', 'DÍAZ MALUENDA MIGUEL ALBERTO', 'KILTAN GONZÁLEZ DIDIER EZEQUIEL', 'LÓPEZ ACUÑA MARCO EMILIO', 'LÓPEZ NOVOA EYDAN DAMIÁN', 'MÉNDEZ SUAZO FABIÁN FELIPE', 'MOYA REYES MATEO ANTONIO BENJAMÍN', 'OSES CAMPOS VALENTINA ABIGAIL', 'PALMA ORELLANA ANTONELLA FRANCISCA', 'PEREIRA ORELLANA MONSERRAT ALAMIRA', 'PÉREZ ORMAZÁBAL ZADKA ALEJANDRA', 'ROJAS GONZÁLEZ FLORENCIA TRINIDAD', 'ROJAS LEIVA EDUARDO JAVIER', 'VÁSQUEZ AGUILERA SCARLET NICOLE', 'YÁÑEZ GONZÁLEZ BRAYAN DAMIÁN', 'VARGAS MORAGA MARTINA SAYEN', 'SALAZAR SALAS PEDRO JOSÉ', 'VERA BRAVO FLORENCIA ANTONIA', 'PÉREZ QUEVEDO CONSTANZA TRINIDAD', 'SALGADO TOLEDO FRANCISCO JAVIER', 'RIQUELME SANTOS BENJAMÍN ALONSO'],
+            'Segundo Medio A': ['AHUMADA ROJAS TRINIDAD BELÉN', 'ESPINOSA TORRES FERNANDA ELENA', 'ESPINOZA PEÑALILLO BRAYAN JESÚS', 'GONZÁLEZ SALAZAR EMILIA CATALINA', 'MEDEL OJEDA LEÓN IGNACIO', 'MORALES REIMÁN ALFONSO TOMÁS', 'PEREIRA HORMAZÁBAL MAXIMILIANO EDUARDO', 'PINTO TOBAR JORDÁN AMARO', 'RECABAL YÁÑEZ KEVIN ANDRÉS', 'RIQUELME CASTILLO MATÍAS EDUARDO ANTONIO', 'RIVERA ABARZA CONSTANZA VICTORIA', 'SANTIS CASSEUS TEIVA SCARLETT', 'SOBARZO YÉVENES KATHERINNE ALEXIA BELÉN', 'TOLEDO ALBORNOZ ANTONELLA INES', 'VENEGAS ARRIAGADA ANTONIA EDITH', 'VIELMA ZABALAGA JOAN MANUEL', 'MEZA COLIMÁN ANGEL BLAS', 'PALMA ORELLANA ANTONELLA FRANCISCA'],
+            'Segundo Medio B': ['ARAYA DOMÍNGUEZ ALEX FABIÁN', 'BRAVO MENARES ALEX JOHAN', 'CARRASCO LEIVA BENJAMÍN IGNACIO', 'CARVAJAL URRUTIA CONSTANZA PRISILA (DANIEL)', 'ENCINA PIZARRO DIEGO BENJAMÍN ALEXANDER', 'FAÚNDEZ NORAMBUENA ALEJANDRO ANTONIO', 'JARAMILLO VILLAR EMILIO SCOTT', 'LÓPEZ VILLAR MARTÍN ALONSO', 'MIRANDA MUÑOZ ALEXANDRA JAVIERA', 'MUÑOZ TRONCOSO HÉCTOR ANTONIO', 'OLIVARES VALENZUELA ALONSO IGNACIO', 'OLIVARES VALENZUELA ANTONELLA DANAE IGNACIA', 'ORELLANA GARRIDO MATÍAS LEANDRO', 'PUNOY MEDEL MILLARAY ANGÉLICA', 'QUIÑENAO MUÑOZ CRISTÓBAL PATRICIO', 'RIQUELME COLOMA DALIA CONSTANZA', 'SALGADO ROJAS VICENTE MOISÉS', 'SANDOVAL CERPA VICENTE ESTEBAN', 'SOTO NARANJO CHRISTOPHER', 'VEKARIC VERDEJO MARTÍN'],
+            'Tercero Medio A': ['ALCÁNTAR GARCÍA MARTINA ALEJANDRA', 'BAHAMONDE MUÑOZ ARIEL LEON', 'CAMPOS MUÑOZ CRISTOPHER JESÚS', 'CANCINO ORÓSTICA VICENTE GASPAR', 'CARRASCO GONZÁLEZ CAMILA ANDREA', 'COFRÉ CASTILLO ANTONIO ANDRÉS', 'CONTRERAS VENEGAS BELÉN ALEJANDRA', 'GALDAMES VERGARA FELIPE ESTEBAN', 'GARCÍA GONZÁLEZ SANTIAGO HUMBERTO', 'GONZÁLEZ AMIGO FRANCISCA IGNACIA', 'GONZÁLEZ SALAZAR JOAQUÍN ALONSO', 'GUTIÉRREZ GUTIÉRREZ ANGEL MARTÍN', 'JARA SEPÚLVEDA KATRINA DARINKA', 'MARTÍNEZ LIZANA AARON ALEJANDRO', 'MEZA CARRASCO BENJAMÍN INTI', 'MIÑO GONZALEZ CATALINA ANDREA', 'MORAGA PACHECO RENATO IGNACIO', 'PÉREZ CORÓN MANUEL IGNACIO', 'SAMANIEGO CORTEZ JAKSON FERGIE', 'SEPÚLVEDA SALAZAR SOFÍA ANTONIA', 'TAPIA ACUÑA GABRIEL ANTONIO', 'VEGA VIVANCO CRISTÓBAL ANTONIO', 'VERA NAVARRETE DANIELA ELIZABETH', 'VILLALOBOS ARAVENA KARINA ANGELINA', 'VILLALOBOS VILLALOBOS SAMIR LUCIAN JESÚS', 'HERNÁNDEZ SEPÚLVEDA VICENTE ALEJANDRO', 'TORREALBA MOYA FLORVELIS DE LOS ANGELES', 'CARO URRUTIA CONSUELO ANTONIA', 'LOBOS CÁCERES ANTONIA PAZ'],
+            'Tercero Medio C': ['ARELLANO ACUÑA MARTÍN ANTONIO', 'AROS ÁVILA DAYANA IGNACIA', 'CABRERA COLOMBINO MARÍA GRACIA', 'FUENTES CARRASCO YARIXA ALEJANDRA', 'GÓMEZ CANCINO DANIELA ALEJANDRA', 'GUTIÉRREZ CARRIÓN MILLARAY CAROLINA', 'HONORATO TAPIA GLORIA JAVIERA', 'LARA RIVERA BENJAMÍN ESTEBAN', 'PALACIOS SOTO JOSÉ TOMÁS', 'PEZO SANTANDER JOSÉ CRISTÓBAL', 'ROCHA ROJAS JOSÉ PABLO WILLIAMS', 'ROJAS YÉVENES FABIANA ISIDORA', 'SÁNCHEZ PAREJA ANDY ANTONIO', 'SANTANDER LÓPEZ SIMÓN ESTEBAN', 'TRONCOSO LIZAMA SIOMARA IGNACIA', 'WARNKEN ROJAS LUCIANA BERNABELA', 'DE LA HOZ VALENZUELA FRANCO SEBASTIÁN', 'COLLAO MEDINA ANAÍS VALENTINA'],
+            'Cuarto Medio A': ['AGURTO CRESPO HOMERO ALEXANDER', 'ANDIA DE LA HOZ CATALINA BELEN', 'FUENTES GONZÁLEZ ESTEBAN ALEXANDER', 'GARCÍA ROJAS SOFÍA ELENA', 'GODOY HERRERA ANTONELLA CONSTANZA PAZ', 'GONZÁLEZ CASTRO KEVIN ALEJANDRO', 'MARCHANT MORÁN PÍA IGNACIA', 'QUINTANA SAN MARTÍN ALAN VICENTE', 'RECABAL YÁÑEZ CRISTOFER BASTIÁN', 'ROJAS GONZÁLEZ GABRIEL ANTONIO', 'TOLEDO MUÑOZ ESPERANZA BELÉN', 'YÁÑEZ GONZÁLEZ FRANCISCA ALEJANDRA'],
+            'Cuarto Medio C': ['Josefa Morales', 'Benjamín Pérez', 'Constanza Varela']
+        };
+
+        // --- Funciones de Inicialización y Carga ---
+
+        function initApp() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                isFirebaseConnected = true;
+
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = `ID: ${userId}`;
+                        statusDisplay.textContent = 'Conectado a Firebase';
+                        statusDisplay.className = 'text-xs font-medium text-green-600';
+                        loadDataFromFirestore();
+                    } else {
+                        signInAnonymously(auth).catch(e => console.error("Error en inicio anónimo:", e));
+                    }
+                });
+            } catch (e) {
+                console.error("Error al inicializar Firebase. Usando modo local:", e);
+                initLocalMode();
+            }
+            dateSelector.value = todayString;
+            updateCurrentDate();
+            setupEventHandlers();
+        }
+
+        function initLocalMode() {
+            isFirebaseConnected = false;
+            userId = 'Modo Local';
+            userIdDisplay.textContent = `ID: ${userId}`;
+            statusDisplay.textContent = 'Modo Local (no se guardan datos)';
+            statusDisplay.className = 'text-xs font-medium text-yellow-600';
+            
+            allClassesData = {};
+            for (const className in initialClassData) {
+                allClassesData[className] = initialClassData[className].map(name => ({
+                    name: name, grades: [], attendance: {}, observations: ''
+                }));
+            }
+            loadingIndicator.style.display = 'none';
+            currentClass = Object.keys(allClassesData)[0];
+            students = allClassesData[currentClass];
+            initializeClassSelector();
+            renderStudentsTable();
+        }
+        
+        function loadDataFromFirestore() {
+            const docRef = doc(db, `artifacts/${appId}/public/data/calificaciones/master_data`);
+            
+            onSnapshot(docRef, (docSnap) => {
+                loadingIndicator.style.display = 'none';
+                
+                let hasData = false;
+                if (docSnap.exists() && docSnap.data().classes) {
+                    allClassesData = docSnap.data().classes;
+                    hasData = Object.keys(allClassesData).length > 0;
+                }
+
+                if (hasData) {
+                    const classNames = Object.keys(allClassesData).sort();
+                    
+                    if (!currentClass || !allClassesData[currentClass]) {
+                        currentClass = classNames[0];
+                    }
+                    
+                } else {
+                    console.log("No hay datos, se crearán las clases iniciales.");
+                    showMessage('Bienvenido', 'No se encontraron datos. Se crearán las listas de clases iniciales. Tus cambios se guardarán automáticamente.');
+                    createInitialData();
+                    return; 
+                }
+
+                students = allClassesData[currentClass] || []; 
+                initializeClassSelector();
+                renderStudentsTable();
+            }, (error) => {
+                console.error("Error al sincronizar con Firestore:", error);
+                showMessage('Error de Sincronización', 'No se pudieron obtener los datos. Revisa tu conexión.');
+            });
+        }
+
+        async function createInitialData() {
+            const initialClasses = {};
+            for (const className in initialClassData) {
+                initialClasses[className] = initialClassData[className].map(name => ({
+                    name, grades: [], attendance: {}, observations: ''
+                }));
+            }
+            const docRef = doc(db, `artifacts/${appId}/public/data/calificaciones/master_data`);
+            await setDoc(docRef, { classes: initialClasses });
+        }
+        
+        async function saveData() {
+            if (!isFirebaseConnected) {
+                showMessage('Modo Local', 'Los cambios no se pueden guardar sin conexión.');
+                renderStudentsTable(); 
+                return;
+            }
+            try {
+                // CORRECCIÓN DE ESTRUCTURA: Asegura que los Arrays no se corrompan si estaban vacíos
+                const dataToSave = JSON.parse(JSON.stringify(allClassesData)); 
+                
+                if (dataToSave[currentClass]) {
+                    dataToSave[currentClass] = dataToSave[currentClass].map(student => ({
+                        name: student.name,
+                        grades: Array.isArray(student.grades) ? student.grades : [],
+                        attendance: typeof student.attendance === 'object' && student.attendance !== null ? student.attendance : {},
+                        observations: student.observations || ''
+                    }));
+                }
+
+                const docRef = doc(db, `artifacts/${appId}/public/data/calificaciones/master_data`);
+                await updateDoc(docRef, { classes: dataToSave });
+            } catch (e) {
+                console.error("Error al guardar en Firestore:", e);
+                showMessage('Error de Guardado', 'No se pudieron guardar los cambios.');
+            }
+        }
+
+        // --- Funciones de UI y Lógica de Negocio ---
+
+        function showMessage(title, message, isConfirm = false, callback = null) {
+            messageTitle.textContent = title;
+            messageContent.textContent = message;
+            okBtn.style.display = isConfirm ? 'none' : 'block';
+            confirmBtn.style.display = isConfirm ? 'block' : 'none';
+            cancelBtn.style.display = isConfirm ? 'block' : 'none';
+
+            okBtn.onclick = () => { messageModal.style.display = 'none'; if (callback) callback(); };
+            confirmBtn.onclick = () => { messageModal.style.display = 'none'; if (callback) callback(true); };
+            cancelBtn.onclick = () => { messageModal.style.display = 'none'; if (callback) callback(false); };
+            
+            messageModal.style.display = 'flex';
+        }
+
+        function renderStudentsTable() {
+            if (!students || students.length === 0) {
+                studentsTableContainer.innerHTML = `<p class="text-center text-gray-500">No hay estudiantes en la clase: ${currentClass}.</p>`;
+                loadingIndicator.style.display = 'none';
+                return;
+            }
+            
+            const tableHtml = `
+                <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">Estudiante</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">Notas</th>
+                            <th class="py-3 px-4 text-center font-semibold text-gray-700">Prom.</th>
+                            <th class="py-3 px-4 text-center font-semibold text-gray-700">Asistencia (${new Date(currentDateString + 'T12:00:00').toLocaleDateString('es-CL')})</th>
+                            <th class="py-3 px-4 text-center font-semibold text-gray-700 no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        ${students.map((student, index) => {
+                            const avg = calculateAverage(student.grades);
+                            const attendance = getAttendanceStatus(student);
+                            return `
+                                <tr class="border-t border-gray-200 hover:bg-gray-50">
+                                    <td class="py-4 px-4 text-gray-800 font-medium">${student.name}</td>
+                                    <td class="py-4 px-4 text-gray-600"><div class="flex flex-wrap gap-2">${(student.grades || []).map(grade => `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${grade.toFixed(1)}</span>`).join('')}</div></td>
+                                    <td class="py-4 px-4 text-lg font-bold text-center ${avg >= 4.0 ? 'text-blue-600' : 'text-red-600'}">${avg.toFixed(1)}</td>
+                                    <td class="py-4 px-4 text-center"><span class="font-semibold text-sm px-2 py-1 rounded-full ${attendance.class}">${attendance.text}</span></td>
+                                    <td class="py-4 px-4 no-print">
+                                        <div class="flex flex-wrap items-center justify-center gap-2">
+                                            <input type="number" step="0.1" min="1.0" max="7.0" placeholder="Nota" id="grade-input-${index}" class="w-24 px-2 py-1 border rounded-lg">
+                                            <button data-action="add-grade" data-index="${index}" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600" title="Agregar Nota">+</button>
+                                            <button data-action="mark-present" data-index="${index}" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600" title="Marcar Presente">✓</button>
+                                            <button data-action="mark-absent" data-index="${index}" class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600" title="Marcar Ausente">✕</button>
+                                            <button data-action="open-observations" data-index="${index}" class="bg-yellow-500 text-white p-2 rounded-lg hover:bg-yellow-600" title="Observaciones">...</button>
+                                            <button data-action="delete-student" data-index="${index}" class="bg-gray-400 text-white p-2 rounded-lg hover:bg-gray-500" title="Eliminar">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>`;
+            studentsTableContainer.innerHTML = tableHtml;
+        }
+
+        function initializeClassSelector() {
+            classSelector.innerHTML = '';
+            const classNames = Object.keys(allClassesData).sort();
+            classNames.forEach(className => {
+                const option = document.createElement('option');
+                option.value = className;
+                option.textContent = className;
+                classSelector.appendChild(option);
+            });
+            if (currentClass) {
+                classSelector.value = currentClass;
+            }
+        }
+        
+        const calculateAverage = (grades) => (grades && grades.length) ? grades.reduce((a, b) => a + b, 0) / grades.length : 0;
+        
+        // **FUNCIÓN CRÍTICA CORREGIDA PARA LEER TODOS LOS FORMATOS DE ASISTENCIA**
+        function getAttendanceStatus(student) {
+            const record = student.attendance && student.attendance[currentDateString];
+            let status = 'N/A';
+            let observation = '';
+
+            if (typeof record === 'string') {
+                // Maneja el formato antiguo donde solo se guardaba el texto ("presente" o "ausente")
+                status = record;
+            } else if (typeof record === 'object' && record !== null && record.status) {
+                // Maneja el formato nuevo (y correcto) donde es un objeto
+                status = record.status;
+                observation = record.observation || '';
+            }
+            
+            // Asigna las clases CSS y el texto a mostrar
+            let text = status === 'presente' ? 'Presente' : status === 'ausente' ? 'Ausente' : 'N/A';
+            let className = status === 'presente' ? 'bg-green-100 text-green-800' : status === 'ausente' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600';
+
+            // Agrega la observación al texto si existe
+            if (observation) {
+                text += ` (Obs: ${observation})`;
+            }
+
+            return { status, text, class: className };
+        }
+
+        function updateCurrentDate() {
+            // Usa la fecha del input para mostrar el día local
+            const dateToDisplay = new Date(currentDateString + 'T12:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateDisplay.textContent = 'Fecha Seleccionada: ' + dateToDisplay.toLocaleDateString('es-ES', options);
+        }
+
+        // --- Manejadores de Eventos ---
+
+        function setupEventHandlers() {
+            addStudentBtn.addEventListener('click', () => {
+                const studentName = studentNameInput.value.trim();
+                if (studentName && currentClass) {
+                    if (!allClassesData[currentClass]) allClassesData[currentClass] = [];
+                    allClassesData[currentClass].push({
+                        name: studentName, grades: [], attendance: {}, observations: ''
+                    });
+                    studentNameInput.value = '';
+                    saveData();
+                } else {
+                    showMessage('Error', 'Debe seleccionar una clase y escribir un nombre de estudiante.');
+                }
+            });
+
+            classSelector.addEventListener('change', (e) => {
+                currentClass = e.target.value;
+                students = allClassesData[currentClass] || [];
+                renderStudentsTable();
+            });
+
+            dateSelector.addEventListener('change', (e) => {
+                currentDateString = e.target.value;
+                updateCurrentDate();
+                renderStudentsTable(); 
+            });
+
+            studentsTableContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                
+                const { action, index } = button.dataset;
+                const studentIndex = parseInt(index, 10);
+                const student = students[studentIndex];
+
+                if (!student) return;
+
+                switch(action) {
+                    case 'add-grade':
+                        const gradeInput = document.getElementById(`grade-input-${studentIndex}`);
+                        const grade = parseFloat(gradeInput.value);
+                        if (!isNaN(grade) && grade >= 1.0 && grade <= 7.0) {
+                            student.grades.push(grade);
+                            gradeInput.value = '';
+                            saveData();
+                        } else {
+                            showMessage('Error de Nota', 'Introduce una nota válida entre 1.0 y 7.0.');
+                        }
+                        break;
+                    case 'mark-present':
+                        if (!student.attendance) student.attendance = {};
+                        // Asegura que se guarde un objeto de registro para la fecha, manteniendo obs
+                        const currentObsP = student.attendance[currentDateString] && typeof student.attendance[currentDateString] === 'object' ? student.attendance[currentDateString].observation : '';
+                        student.attendance[currentDateString] = { status: 'presente', observation: currentObsP || '' }; 
+                        saveData();
+                        break;
+                    case 'mark-absent':
+                        if (!student.attendance) student.attendance = {};
+                         // Asegura que se guarde un objeto de registro para la fecha, manteniendo obs
+                        const currentObsA = student.attendance[currentDateString] && typeof student.attendance[currentDateString] === 'object' ? student.attendance[currentDateString].observation : '';
+                        student.attendance[currentDateString] = { status: 'ausente', observation: currentObsA || '' }; 
+                        saveData();
+                        break;
+                    case 'open-observations':
+                        currentStudentIndex = studentIndex;
+                        modalTitle.textContent = `Observaciones para ${student.name} (${currentDateString})`;
+                        
+                        if (!student.attendance) student.attendance = {};
+                        if (typeof student.attendance[currentDateString] === 'string' || !student.attendance[currentDateString]) {
+                            // Si es formato antiguo o nulo, inicializa como objeto
+                            const prevStatus = typeof student.attendance[currentDateString] === 'string' ? student.attendance[currentDateString] : 'N/A';
+                            student.attendance[currentDateString] = { status: prevStatus, observation: '' };
+                        }
+                        
+                        const record = student.attendance[currentDateString];
+                        observationTextarea.value = record.observation || '';
+                        observationModal.style.display = 'flex';
+                        break;
+                    case 'delete-student':
+                        showMessage('Confirmar Eliminación', `¿Seguro de eliminar a ${student.name}?`, true, (confirmed) => {
+                            if (confirmed) {
+                                students.splice(studentIndex, 1);
+                                saveData();
+                            }
+                        });
+                        break;
+                }
+            });
+
+            saveObservationBtn.addEventListener('click', () => {
+                const student = students[currentStudentIndex];
+                if (student && student.attendance[currentDateString]) {
+                    student.attendance[currentDateString].observation = observationTextarea.value;
+                    saveData();
+                }
+                observationModal.style.display = 'none';
+            });
+
+            closeObservationModalBtn.addEventListener('click', () => observationModal.style.display = 'none');
+            closeMessageModalBtn.addEventListener('click', () => messageModal.style.display = 'none');
+            printCurrentViewBtn.addEventListener('click', () => window.print());
+            generateReportBtn.addEventListener('click', generateClassReport);
+            printReportBtn.addEventListener('click', () => window.print());
+            printDetailsBtn.addEventListener('click', () => window.print());
+            hideReportBtn.addEventListener('click', () => showView('table'));
+            backToReportBtn.addEventListener('click', () => showView('report'));
+
+            classReportContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (button && button.dataset.action === 'view-details') {
+                    generateDetailedReport(button.dataset.class);
+                }
+            });
+        }
+
+        function showView(view) {
+            studentsTableContainer.classList.toggle('hidden', view !== 'table');
+            classReportContainer.classList.toggle('hidden', view !== 'report' && view !== 'details');
+            classDetailsContainer.classList.toggle('hidden', view !== 'details');
+        }
+
+        // --- Funciones de Reporte (completas) ---
+        function generateClassReport() {
+            let reportHtml = '';
+            const classNames = Object.keys(allClassesData);
+            
+            if (classNames.length === 0) {
+                reportHtml = '<p class="text-center text-gray-500">No hay datos de clases para generar un reporte.</p>';
+            } else {
+                reportHtml = `
+                    <div class="space-y-8">
+                        ${classNames.map(className => {
+                            const studentsInClass = allClassesData[className];
+                            const numStudents = studentsInClass.length;
+                            let totalPresent = 0;
+                            let totalAbsent = 0;
+                            let totalGrades = 0;
+                            let totalGradeSum = 0;
+
+                            studentsInClass.forEach(student => {
+                                for (const date in student.attendance) {
+                                    const status = typeof student.attendance[date] === 'object' ? student.attendance[date].status : student.attendance[date];
+                                    if (status === 'presente') {
+                                        totalPresent++;
+                                    } else if (status === 'ausente') {
+                                        totalAbsent++;
+                                    }
+                                }
+                                totalGrades += student.grades.length;
+                                totalGradeSum += student.grades.reduce((sum, grade) => sum + grade, 0);
+                            });
+
+                            const averageGrade = totalGrades > 0 ? (totalGradeSum / totalGrades).toFixed(2) : 'N/A';
+                            const totalAttendanceRecords = totalPresent + totalAbsent;
+                            const attendanceRate = totalAttendanceRecords > 0 ? ((totalPresent / totalAttendanceRecords) * 100).toFixed(2) : 'N/A';
+                            
+                            return `
+                                <div class="bg-white p-6 rounded-lg shadow-md">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2">${className}</h3>
+                                    <table class="w-full text-left table-auto">
+                                        <tbody>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-2 font-medium text-gray-700">Estudiantes:</td>
+                                                <td class="py-2 text-right">${numStudents}</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-2 font-medium text-gray-700">Promedio General de Notas:</td>
+                                                <td class="py-2 text-right">${averageGrade}</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-2 font-medium text-gray-700">Registros de Asistencia:</td>
+                                                <td class="py-2 text-right">${totalAttendanceRecords}</td>
+                                            </tr>
+                                            <tr class="border-b border-gray-200">
+                                                <td class="py-2 font-medium text-gray-700">Tasa de Asistencia:</td>
+                                                <td class="py-2 text-right">${attendanceRate}%</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="mt-4 text-right no-print">
+                                        <button data-action="view-details" data-class="${className}"
+                                            class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                                            Ver Detalle
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+            
+            classReportContent.innerHTML = reportHtml;
+            showView('report');
+        }
+
+        function generateDetailedReport(className) {
+            const studentsInClass = allClassesData[className];
+            if (!studentsInClass) return;
+
+            classDetailsTitle.textContent = `Reporte Detallado: ${className}`;
+
+            let detailedHtml = `
+                <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Estudiante</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Notas</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Promedio</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Asistencia (P/A)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${studentsInClass.map(student => {
+                            const gradesHtml = (student.grades || []).map(grade => `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${grade.toFixed(1)}</span>`).join('');
+                            const average = calculateAverage(student.grades).toFixed(1);
+                            
+                            let presentCount = 0;
+                            let absentCount = 0;
+                            for (const date in student.attendance) {
+                                const status = typeof student.attendance[date] === 'object' ? student.attendance[date].status : student.attendance[date];
+                                if (status === 'presente') presentCount++;
+                                if (status === 'ausente') absentCount++;
+                            }
+                            
+                            return `
+                                <tr class="border-t border-gray-200">
+                                    <td class="py-4 px-4 text-gray-800 font-medium">${student.name}</td>
+                                    <td class="py-4 px-4 text-gray-600">${gradesHtml}</td>
+                                    <td class="py-4 px-4 text-lg font-bold text-blue-600">${average}</td>
+                                    <td class="py-4 px-4">
+                                        <span class="bg-green-100 text-green-800 text-sm font-semibold px-2 py-1 rounded-full">${presentCount} P</span>
+                                        <span class="bg-red-100 text-red-800 text-sm font-semibold px-2 py-1 rounded-full">${absentCount} A</span>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            classDetailsContent.innerHTML = detailedHtml;
+            showView('details');
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
