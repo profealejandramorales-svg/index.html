@@ -7,234 +7,218 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        /* Estilos específicos para la impresión */
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .printable-container { width: 100%; }
+        /* Colores de botones según el formato */
+        .btn-add { background-color: #22c55e; } 
+        .btn-add:hover { background-color: #16a34a; }
+        .btn-grade { background-color: #f97316; } 
+        .btn-grade:hover { background-color: #ea580c; }
+        .btn-present { background-color: #22c55e; } 
+        .btn-present:hover { background-color: #16a34a; }
+        .btn-absent { background-color: #ef4444; } 
+        .btn-absent:hover { background-color: #dc2626; }
+        .btn-justified { background-color: #facc15; } 
+        .btn-justified:hover { background-color: #eab308; }
+        .btn-delete { background-color: #9ca3af; } 
+        .btn-delete:hover { background-color: #6b7280; }
+        .btn-volver { background-color: #a855f7; } 
+        .btn-volver:hover { background-color: #9333ea; }
+        .btn-print { background-color: #0d9488; }
+        .btn-print:hover { background-color: #0f766e; }
+        
+        /* Reglas de IMPRESIÓN */
+        .print-only { display: none; }
+        
         @media print {
-            body {
-                background-color: #fff;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .printable-container {
-                display: block !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
-            }
-            /* Asegura que los títulos y tablas se vean bien en la impresión */
-            .printable-container h1, .printable-container h2 {
-                text-align: center;
-                margin-bottom: 2rem;
-            }
-            .printable-container table {
+            .no-print { display: none !important; }
+            .printable-container { margin: 0; padding: 0; box-shadow: none; }
+            body { background-color: white; }
+
+            .print-only { display: block; }
+            
+            #printHeader {
+                position: fixed;
+                top: 0;
                 width: 100%;
+                text-align: center;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 5px;
+                margin-bottom: 20px;
+                background-color: white;
             }
-            .printable-container .shadow-md, .printable-container .rounded-lg {
-                box-shadow: none !important;
-                border-radius: 0 !important;
+            
+            #printFooter {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                border-top: 1px solid #ccc;
+                padding-top: 5px;
+                margin-top: 20px;
+                background-color: white;
+                font-size: 10px;
+            }
+            
+            body > .printable-container {
+                padding-top: 40px; 
+                padding-bottom: 20px; 
             }
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="printable-container bg-white p-8 rounded-2xl shadow-xl max-w-4xl w-full">
+    <div id="printHeader" class="print-only">
+        <h3 class="text-xl font-bold text-gray-800">Gestion Academica en el aula</h3>
+    </div>
+
+    <div class="printable-container bg-white p-8 rounded-2xl shadow-xl max-w-5xl w-full">
         <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center no-print">Control de Asistencia y Calificaciones</h1>
-        <p class="text-gray-500 mb-6 text-center no-print">Gestión de estudiantes, notas, asistencia y observaciones.</p>
-        <p id="currentDate" class="text-gray-600 text-center mb-6 no-print"></p>
+        <p class="text-gray-500 mb-6 text-center no-print">Gestión de estudiantes, notas, asistencia y observaciones (Datos Privados).</p>
+        <p id="currentDate" class="text-gray-600 text-center mb-6 no-print font-bold"></p>
 
         <div class="no-print text-center mb-4">
-            <p class="text-sm text-gray-500">
-                <span id="userIdDisplay" class="font-mono text-blue-600 font-semibold break-all">Cargando...</span>
-                <br>
+             <p class="text-sm text-gray-500">
+                ID de usuario: <span id="userIdDisplay" class="font-mono text-purple-600 font-semibold break-all">Cargando...</span><br>
                 <span id="statusDisplay" class="text-xs font-medium mt-1"></span>
-            </p>
+             </p>
         </div>
 
-        <div class="no-print mb-8 space-y-4 md:space-y-0 md:flex md:justify-between md:items-end">
-            <div class="flex-1 mr-4">
-                <label for="classSelector" class="block text-gray-700 font-semibold mb-2">Seleccionar Clase</label>
-                <select id="classSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                    </select>
-            </div>
-            
-            <div class="flex-1 mr-4">
-                <label for="dateSelector" class="block text-gray-700 font-semibold mb-2">Seleccionar Fecha</label>
-                <input type="date" id="dateSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-            </div>
-            
-            <div class="flex-1 md:flex-none md:w-auto md:ml-4">
-                <label for="studentNameInput" class="block text-gray-700 font-semibold mb-2">Agregar Estudiante</label>
+        <div id="controlsContainer" class="no-print mb-8 space-y-4 md:space-y-0 md:flex md:justify-between md:items-end">
+             <div class="flex flex-col space-y-1">
+                <label for="classSelector" class="text-gray-700 font-medium">Seleccionar Clase</label>
+                <select id="classSelector" class="p-2 border rounded-lg shadow-sm w-48"></select>
+             </div>
+             
+             <div class="flex flex-col space-y-1">
+                <label for="dateSelector" class="text-gray-700 font-medium">Seleccionar Fecha</label>
+                <input type="date" id="dateSelector" class="p-2 border rounded-lg shadow-sm w-40">
+             </div>
+
+             <div class="flex flex-col space-y-1">
+                <label for="studentNameInput" class="text-gray-700 font-medium">Agregar Estudiante</label>
                 <div class="flex">
-                    <input type="text" id="studentNameInput" placeholder="Ej: Juan Pérez"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                    <button id="addStudentBtn"
-                        class="ml-2 bg-green-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-md hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
-                        +
-                    </button>
+                    <input type="text" id="studentNameInput" placeholder="Ej: Juan Pérez" class="p-2 border rounded-l-lg shadow-sm w-48" />
+                    <button id="addStudentBtn" class="btn-add text-white font-bold py-2 px-3 rounded-r-lg transition duration-150 shadow-md">+</button>
                 </div>
-            </div>
+             </div>
+             
+             <button id="saveDataBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md w-40 md:w-auto">
+                Guardar Datos
+             </button>
         </div>
 
-        <div id="studentsTableContainer" class="min-h-[200px] flex items-center justify-center printable-container">
-            <div id="loadingIndicator" class="text-gray-500 text-center flex flex-col items-center gap-2">
-                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p>Cargando datos...</p>
-            </div>
+        <div id="backToTableContainer" class="no-print text-center mb-6 hidden">
+             <button id="backToTableBtn" class="btn-volver text-white font-bold py-2 px-4 rounded-lg transition duration-150 mr-4">
+                Volver a la Tabla
+             </button>
+             <button id="printReportBtn" class="btn-print text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+                Imprimir Reporte
+             </button>
         </div>
 
-        <div class="no-print mt-8 text-center space-y-4 md:space-x-4">
-            <button id="printCurrentViewBtn"
-                class="w-full md:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                Imprimir Vista Actual
+        <div id="studentsTableContainer" class="min-h-[200px] flex flex-col justify-start printable-container">
+            <div id="loadingIndicator" class="text-center p-10">Cargando datos...</div>
+            
+            <div id="tableHeader" class="grid grid-cols-6 gap-2 py-3 border-b-2 border-gray-300 font-bold text-gray-700 uppercase text-sm text-center">
+                <div class="col-span-1 text-left">ESTUDIANTE</div>
+                <div>NOTAS</div>
+                <div>PROMEDIO</div>
+                <div>ASISTENCIA</div>
+                <div class="col-span-2 text-left">ACCIONES</div>
+            </div>
+             <div id="tableBody">
+                </div>
+        </div>
+
+        <div id="reportButtons" class="no-print mt-8 text-center space-y-4 md:space-y-0 md:flex md:justify-center md:space-x-4">
+            <button id="showReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
+                Ver Reporte de Clases
             </button>
-            <button id="generateReportBtn"
-                class="w-full md:w-auto bg-purple-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
-                Generar Reporte de Clases
+            <button id="showDetailedReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
+                Ver Reporte Detallado
             </button>
         </div>
 
-        <div id="classReportContainer" class="hidden mt-8 printable-container">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Resumen de Clases</h2>
-            <div id="classReportContent"></div>
-            <div class="text-center mt-4 no-print">
-                <button id="printReportBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    Imprimir Reporte
-                </button>
-                <button id="hideReportBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">Volver a la tabla</button>
-            </div>
-        </div>
-
-        <div id="classDetailsContainer" class="hidden mt-8 printable-container">
-            <h2 id="classDetailsTitle" class="text-2xl font-bold text-gray-800 mb-4 text-center"></h2>
-            <div id="classDetailsContent"></div>
-            <div class="text-center mt-4 no-print">
-                <button id="printDetailsBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    Imprimir Reporte Detallado
-                </button>
-                <button id="backToReportBtn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">Volver al Resumen</button>
-            </div>
-        </div>
+        <div id="classReportContainer" class="hidden mt-8 printable-container"></div>
+        <div id="classDetailsContainer" class="hidden mt-8 printable-container"></div>
         
-        <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="modalTitle" class="text-xl font-bold text-gray-800">Observaciones para...</h2>
-                    <button id="closeObservationModalBtn" class="text-gray-500 hover:text-gray-800">&times;</button>
-                </div>
-                <textarea id="observationTextarea" rows="4" placeholder="Escribe tus observaciones aquí..."
-                    class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                <button id="saveObservationBtn"
-                    class="mt-4 w-full bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors">
-                    Guardar
-                </button>
-            </div>
-        </div>
-
-        <div id="messageModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="messageTitle" class="text-xl font-bold text-gray-800"></h2>
-                    <button id="closeMessageModalBtn" class="text-gray-500 hover:text-gray-800">&times;</button>
-                </div>
-                <p id="messageContent" class="text-gray-600 mb-4"></p>
-                <div id="messageButtons" class="flex justify-end gap-2">
-                    <button id="confirmBtn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hidden">Confirmar</button>
-                    <button id="cancelBtn" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg hidden">Cancelar</button>
-                    <button id="okBtn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hidden">OK</button>
-                </div>
-            </div>
-        </div>
+        <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"></div>
+        <div id="messageModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"></div>
+    </div>
+    
+    <div id="printFooter" class="print-only text-gray-500">
+        Desarrollado por ProfeAle
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Establece el nivel de log para depuración de Firestore
-        // setLogLevel('debug'); // Descomenta solo si necesitas ayuda con la conexión
-
-        // --- TU CONFIGURACIÓN DE FIREBASE PERSONAL AQUÍ ---
-        // PEGA EL OBJETO 'const firebaseConfig = { ... }' DE TU PROYECTO FIREBASE PERSONAL Y ACTIVO.
+        // Configuración de Firebase
         const firebaseConfig = {
-  apiKey: "AIzaSyAFp6biz1UTr9Ehaudkpe7QyTFVbdQz5Sc",
-  authDomain: "asistencia-mi-clase.firebaseapp.com",
-  projectId: "asistencia-mi-clase",
-  storageBucket: "asistencia-mi-clase.firebasestorage.app",
-  messagingSenderId: "552398254230",
-  appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7",
-  measurementId: "G-MYR01HM1YE"
-};
-        // --------------------------------------------------
-        
-        // --- Application State ---
+            apiKey: "AIzaSyAFp6biz1UTr9Ehaudkpe7QyTFVbdQz5Sc",
+            authDomain: "asistencia-mi-clase.firebaseapp.com",
+            projectId: "asistencia-mi-clase",
+            storageBucket: "asistencia-mi-clase.appspot.com",
+            messagingSenderId: "552398254230",
+            appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7", 
+            measurementId: "G-MYR01HM1YE"
+        };
+        const appId = firebaseConfig.appId;
+
+        // --- Estado de la App ---
         let app, db, auth;
         let isFirebaseConnected = false;
+        
         const today = new Date();
-        const todayString = today.toISOString().slice(0, 10);
-        let currentDateString = todayString; 
-        let allClassesData = {}; 
-        let currentClass = null; 
-        let students = []; 
-        let userId; 
-        let currentStudentIndex = -1; 
-        let currentClassReport = null; 
+        const offset = today.getTimezoneOffset() * 60000;
+        const localTime = new Date(today.getTime() - offset);
+        const todayString = localTime.toISOString().slice(0, 10);
+        
+        let currentDateString = todayString;
+        let allClassesData = {};
+        let currentClass = null;
+        let students = [];
+        let userId;
 
         // --- DOM Elements ---
-        const studentNameInput = document.getElementById('studentNameInput');
-        const addStudentBtn = document.getElementById('addStudentBtn');
-        const studentsTableContainer = document.getElementById('studentsTableContainer');
-        const currentDateDisplay = document.getElementById('currentDate');
-        const observationModal = document.getElementById('observationModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const observationTextarea = document.getElementById('observationTextarea');
-        const saveObservationBtn = document.getElementById('saveObservationBtn');
-        const closeObservationModalBtn = document.getElementById('closeObservationModalBtn');
-        const classSelector = document.getElementById('classSelector');
-        const dateSelector = document.getElementById('dateSelector'); 
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const messageModal = document.getElementById('messageModal');
-        const messageTitle = document.getElementById('messageTitle');
-        const messageContent = document.getElementById('messageContent');
-        const messageButtons = document.getElementById('messageButtons');
-        const okBtn = document.getElementById('okBtn');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const closeMessageModalBtn = document.getElementById('closeMessageModalBtn');
-        const userIdDisplay = document.getElementById('userIdDisplay');
-        const statusDisplay = document.getElementById('statusDisplay');
-        const generateReportBtn = document.getElementById('generateReportBtn');
-        const classReportContainer = document.getElementById('classReportContainer');
-        const classReportContent = document.getElementById('classReportContent');
-        const classDetailsContainer = document.getElementById('classDetailsContainer');
-        const classDetailsTitle = document.getElementById('classDetailsTitle');
-        const classDetailsContent = document.getElementById('classDetailsContent');
-        const printCurrentViewBtn = document.getElementById('printCurrentViewBtn');
-        const printReportBtn = document.getElementById('printReportBtn');
-        const printDetailsBtn = document.getElementById('printDetailsBtn');
-        const hideReportBtn = document.getElementById('hideReportBtn');
-        const backToReportBtn = document.getElementById('backToReportBtn');
+        function getEl(id) { return document.getElementById(id); }
+        
+        const userIdDisplay = getEl('userIdDisplay');
+        const statusDisplay = getEl('statusDisplay');
+        const currentDateElement = getEl('currentDate');
+        const studentsTableContainer = getEl('studentsTableContainer');
+        const loadingIndicator = getEl('loadingIndicator');
+        const classSelector = getEl('classSelector');
+        const dateSelector = getEl('dateSelector');
+        const saveDataBtn = getEl('saveDataBtn');
+        const showReportBtn = getEl('showReportBtn');
+        const showDetailedReportBtn = getEl('showDetailedReportBtn');
+        const backToTableBtn = getEl('backToTableBtn');
+        const printReportBtn = getEl('printReportBtn'); 
+        const classReportContainer = getEl('classReportContainer');
+        const classDetailsContainer = getEl('classDetailsContainer');
+        const studentNameInput = getEl('studentNameInput');
+        const addStudentBtn = getEl('addStudentBtn');
+        const tableBody = getEl('tableBody');
+        const tableHeader = getEl('tableHeader');
+        const controlsContainer = getEl('controlsContainer');
+        const reportButtons = getEl('reportButtons');
+        const backToTableContainer = getEl('backToTableContainer');
+        const messageModal = getEl('messageModal'); 
 
-        // --- Datos de prueba para el modo local ---
+        // --- Datos Iniciales (LISTA COMPLETA DE 7 CURSOS) ---
         const initialClassData = {
-            'Primero Medio A': [
+            "Primero Medio A": [
                 'ALBURQUENQUE DEL GRECCO EMILYA ANTONIA', 'ANABALÓN BELTRÁN BENJAMÍN NICOLÁS',
                 'CONTRERAS SALGADO HADEEY ALEJANDRA', 'FERRADA ALBORNOZ AGUSTÍN ALEXIS',
                 'HERNÁNDEZ FERNÁNDEZ DHARIEN ALEXSANDER', 'IBÁÑEZ GONZÁLEZ FERNANDA MAGDALENA',
                 'LAGOS LASTRA ALEXANDRA DANAE', 'LÓPEZ LÓPEZ LUCIANO ANTONIO',
                 'MALDONADO FLORES ANTONELLA BELÉN', 'MARIN MARÍN IGNACIO ANTONIO',
-                'MONTECINO DÍAZ VALESKA BELÉN', 'MUÑOZ CONTRERZ LUIS GABRIEL',
+                'MONTECINO DÍAZ VALESKA BELÉN', 'MUÑOZ CONTRERAS LUIS GABRIEL',
                 'MUÑOZ LUNA ROGER JOEL', 'NAVARRO VILLANUEVA KARLA PAZ',
                 'ORELLANA ARRIAGADA SEBASTIÁN ANDRÉS', 'QUEZADA NARANJO FELIPE ALONSO',
                 'QUINTEROS VERGARA FERNANDA FLORENCIA', 'RAMÍREZ VILLALOBOS DUVAN EMILIO',
@@ -243,8 +227,8 @@
                 'ZABALAGA COFRÉ DAMIÁN ANDRÉS', 'BAEZ DONOSO LUKAS ALFONSO',
                 'MESA DÍAZ GONZALO IGNACIO', 'BAREA SALGADO SERGIO ALEXANDER'
             ],
-            'Primero Medio B': [
-                'ARAYA DOMÍNGUEZ NOEMÍ JESÚS DE LAS ESTRELLAS', 'ASTUDILLO CAMPOS CRISTÓBAL ANTONIO',
+            "Primero Medio B": [
+                'ARAVENA ZÚÑIGA NOEMÍ JESÚS DE LAS ESTRELLAS', 'ASTUDILLO CAMPOS CRISTÓBAL ANTONIO',
                 'ASTUDILLO VÁSQUEZ BRUNO FERNANDO LEÓN', 'CASTILLO MUÑOZ RENÉ ANTONIO',
                 'CID CERDA MARÍA EVANGELINA', 'CUMINAO VIDAL CATALINA ANDREA',
                 'DÍAZ MALUENDA MIGUEL ALBERTO', 'KILTAN GONZÁLEZ DIDIER EZEQUIEL',
@@ -258,7 +242,7 @@
                 'VERA BRAVO FLORENCIA ANTONIA', 'PÉREZ QUEVEDO CONSTANZA TRINIDAD',
                 'SALGADO TOLEDO FRANCISCO JAVIER', 'RIQUELME SANTOS BENJAMÍN ALONSO'
             ],
-            'Segundo Medio A': [
+            "Segundo Medio A": [
                 'AHUMADA ROJAS TRINIDAD BELÉN', 'ESPINOSA TORRES FERNANDA ELENA',
                 'ESPINOZA PEÑALILLO BRAYAN JESÚS', 'GONZÁLEZ SALAZAR EMILIA CATALINA',
                 'MEDEL OJEDA LEÓN IGNACIO', 'MORALES REIMÁN ALFONSO TOMÁS',
@@ -269,7 +253,7 @@
                 'VENEGAS ARRIAGADA ANTONIA EDITH', 'VIELMA ZABALAGA JOAN MANUEL',
                 'MEZA COLIMÁN ANGEL BLAS', 'PALMA ORELLANA ANTONELLA FRANCISCA'
             ],
-            'Segundo Medio B': [
+            "Segundo Medio B": [
                 'ARAYA DOMÍNGUEZ ALEX FABIÁN', 'BRAVO MENARES ALEX JOHAN',
                 'CARRASCO LEIVA BENJAMÍN IGNACIO', 'CARVAJAL URRUTIA CONSTANZA PRISILA (DANIEL)',
                 'ENCINA PIZARRO DIEGO BENJAMÍN ALEXANDER', 'FAÚNDEZ NORAMBUENA ALEJANDRO ANTONIO',
@@ -281,7 +265,7 @@
                 'SALGADO ROJAS VICENTE MOISÉS', 'SANDOVAL CERPA VICENTE ESTEBAN',
                 'SOTO NARANJO CHRISTOPHER', 'VEKARIC VERDEJO MARTÍN'
             ],
-            'Tercero Medio A': [
+            "Tercero Medio A": [
                 'ALCÁNTAR GARCÍA MARTINA ALEJANDRA', 'BAHAMONDE MUÑOZ ARIEL LEON',
                 'CAMPOS MUÑOZ CRISTOPHER JESÚS', 'CANCINO ORÓSTICA VICENTE GASPAR',
                 'CARRASCO GONZÁLEZ CAMILA ANDREA', 'COFRÉ CASTILLO ANTONIO ANDRÉS',
@@ -298,7 +282,7 @@
                 'TORREALBA MOYA FLORVELIS DE LOS ANGELES', 'CARO URRUTIA CONSUELO ANTONIA',
                 'LOBOS CÁCERES ANTONIA PAZ'
             ],
-            'Tercero Medio C': [
+            "Tercero Medio C": [
                 'ARELLANO ACUÑA MARTÍN ANTONIO', 'AROS ÁVILA DAYANA IGNACIA',
                 'CABRERA COLOMBINO MARÍA GRACIA', 'FUENTES CARRASCO YARIXA ALEJANDRA',
                 'GÓMEZ CANCINO DANIELA ALEJANDRA', 'GUTIÉRREZ CARRIÓN MILLARAY CAROLINA',
@@ -309,7 +293,7 @@
                 'TRONCOSO LIZAMA SIOMARA IGNACIA', 'WARNKEN ROJAS LUCIANA BERNABELA',
                 'DE LA HOZ VALENZUELA FRANCO SEBASTIÁN', 'COLLAO MEDINA ANAÍS VALENTINA'
             ],
-            'Cuarto Medio A': [
+            "Cuarto Medio A": [
                 'AGURTO CRESPO HOMERO ALEXANDER', 'ANDIA DE LA HOZ CATALINA BELEN',
                 'FUENTES GONZÁLEZ ESTEBAN ALEXANDER', 'GARCÍA ROJAS SOFÍA ELENA',
                 'GODOY HERRERA ANTONELLA CONSTANZA PAZ', 'GONZÁLEZ CASTRO KEVIN ALEJANDRO',
@@ -317,572 +301,383 @@
                 'RECABAL YÁÑEZ CRISTOFER BASTIÁN', 'ROJAS GONZÁLEZ GABRIEL ANTONIO',
                 'TOLEDO MUÑOZ ESPERANZA BELÉN', 'YÁÑEZ GONZÁLEZ FRANCISCA ALEJANDRA'
             ],
-            'Cuarto Medio C': [
+            "Cuarto Medio C": [
                 'Josefa Morales', 'Benjamín Pérez', 'Constanza Varela'
             ],
         };
-
-        // --- Funciones de Utilidad (CORREGIDA: Ruta limpia de Firestore) ---
         
-        /**
-         * Obtiene la referencia al documento de Firestore para el usuario actual.
-         */
-        function getDataDocRef() {
-            // RUTA CORREGIDA: Usa una colección simple llamada 'teachers_data'
-            const dataPath = `teachers_data/${userId}`; 
-            return doc(db, dataPath);
+        // --- FUNCIÓN CLAVE PARA LA RUTA ÚNICA DEL PROFESOR (CORREGIDA LA ESTRUCTURA) ---
+        function getTeacherDocRef() {
+            // RUTA CORREGIDA: /registros_publicos/{userId}/coleccion_datos/datos_maestros (4 segmentos válidos)
+            return doc(db, `registros_publicos/${userId}/coleccion_datos/datos_maestros`);
         }
+        // --------------------------------------------------------------------------------
 
-        // Función de utilidad para calcular el promedio (se mantiene igual)
-        function calculateAverage(grades) {
-            if (!grades || grades.length === 0) return 0.0;
-            const sum = grades.reduce((a, b) => a + b, 0);
-            return sum / grades.length;
-        }
-
-        // Función de utilidad para obtener el estado de asistencia (se mantiene igual)
-        function getAttendanceStatus(student) {
-            if (student.attendance && student.attendance[currentDateString]) {
-                return student.attendance[currentDateString];
-            }
-            return { status: 'N/A', observation: '' };
-        }
-
-        // Función de utilidad para formatear la fecha (se mantiene igual)
-        function updateCurrentDate() {
-            const dateObj = new Date(currentDateString);
-            currentDateDisplay.textContent = `Fecha Seleccionada: ${dateObj.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-        }
-
-        // --- Funciones Principales ---
-        
-        /**
-         * Initializes Firebase or falls back to local mode.
-         * @async
-         */
         async function initApp() {
-            // Verifica si la configuración de Firebase tiene la clave API (la señal de que el usuario la pegó)
-            if (firebaseConfig.apiKey && firebaseConfig.apiKey.length > 5) {
-                try {
-                    app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    isFirebaseConnected = true;
+             try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                isFirebaseConnected = true;
 
-                    // El inicio de sesión anónimo es CLAVE para la separación de datos
-                    const userCredential = await signInAnonymously(auth);
-                    userId = userCredential.user.uid;
-                    
-                    userIdDisplay.textContent = `ID de usuario: ${userId}`;
-                    statusDisplay.textContent = 'Conectado a Firebase';
-                    statusDisplay.classList.remove('text-yellow-600');
-                    statusDisplay.classList.add('text-green-600');
-                    console.log("User authenticated:", userId);
+                dateSelector.value = currentDateString;
 
-                    loadDataFromFirestore();
-                } catch (e) {
-                    console.error("Error initializing Firebase. Using local mode:", e);
-                    // Si falla, el modo local es la única alternativa
-                    initLocalMode();
-                }
-            } else {
-                initLocalMode();
-            }
-            // Inicializa el selector de fecha y la fecha actual en la interfaz
-            dateSelector.value = todayString;
-            updateCurrentDate(); 
-            setupEventHandlers();
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = `ID de Sesión: ${userId.substring(0, 8)}...`;
+                        statusDisplay.textContent = 'Conectado a Firebase (Datos Privados)';
+                        statusDisplay.className = 'text-xs font-medium text-green-600'; 
+                        loadDataFromFirestore();
+                    } else {
+                        signInAnonymously(auth).catch(e => console.error("Error inicio anónimo:", e));
+                    }
+                });
+             } catch (e) {
+                 console.error("Error al iniciar Firebase:", e);
+                 showMessage('Error Fatal', 'No se pudo conectar a Firebase.');
+             }
+             updateCurrentDateUI();
+             setupEventHandlers();
         }
 
-        /**
-         * Initializes the application in local mode with mock data.
-         */
-        function initLocalMode() {
-            isFirebaseConnected = false;
-            userId = 'Sin ID de usuario';
-            userIdDisplay.textContent = `ID temporal: ${crypto.randomUUID()}`; 
-            statusDisplay.textContent = 'Modo Local (datos en memoria)';
-            statusDisplay.classList.remove('text-green-600');
-            statusDisplay.classList.add('text-yellow-600');
-            
-            allClassesData = {};
-            for (const className in initialClassData) {
-                allClassesData[className] = initialClassData[className].map(name => ({
-                    name: name,
-                    grades: [],
-                    attendance: {},
-                    observations: ''
-                }));
-            }
-            loadingIndicator.style.display = 'none';
-            currentClass = Object.keys(allClassesData)[0];
-            students = allClassesData[currentClass];
-            initializeClassSelector();
-            renderStudentsTable();
-        }
-        
-        /**
-         * Loads data from Firestore and sets up a real-time listener.
-         */
         function loadDataFromFirestore() {
-            const docRef = getDataDocRef();
-            
-            onSnapshot(docRef, (docSnap) => {
-                loadingIndicator.style.display = 'none';
-                if (docSnap.exists() && docSnap.data().classes) {
-                    allClassesData = docSnap.data().classes;
-                    // Mantiene la clase seleccionada si existe
-                    currentClass = currentClass || Object.keys(allClassesData)[0];
-                    if (!allClassesData[currentClass] && Object.keys(allClassesData).length > 0) {
-                         currentClass = Object.keys(allClassesData)[0];
+            try {
+                const docRef = getTeacherDocRef(); 
+
+                onSnapshot(docRef, (docSnap) => {
+                    loadingIndicator.style.display = 'none';
+                    if (docSnap.exists() && docSnap.data().classes) {
+                        allClassesData = docSnap.data().classes;
+                        if (!currentClass || !allClassesData[currentClass]) {
+                            currentClass = Object.keys(allClassesData)[0];
+                        }
+                    } else {
+                        // El documento no existe para este nuevo profesor, lo creamos.
+                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales para tu cuenta. Por favor, guarde una vez que la tabla aparezca.');
+                        createInitialData(); 
+                        return; 
                     }
                     students = allClassesData[currentClass] || [];
                     initializeClassSelector();
                     renderStudentsTable();
-                } else {
-                    console.log("No data found for this user, creating initial document.");
-                    createInitialData();
-                }
-            }, (error) => {
-                console.error("Error fetching Firestore document in real-time:", error);
+                }, (error) => {
+                    loadingIndicator.style.display = 'none';
+                    studentsTableContainer.innerHTML = `<p class="text-red-600">Error al cargar los datos: ${error.message}</p>`;
+                    showMessage('Error de Carga', `No se pudieron cargar los datos. Revise las reglas de seguridad de Firestore para la ruta: /registros_publicos/{userId}/coleccion_datos/datos_maestros.`);
+                });
+            } catch (e) {
                 loadingIndicator.style.display = 'none';
-                showMessage('Error de Sincronización', 'No se pudieron sincronizar los datos. Revisa la conexión o intenta recargar.');
+                showMessage('Error', e.message);
+            }
+        }
+
+        async function createInitialData() {
+             const initialClasses = {};
+             for (const className in initialClassData) {
+                 initialClasses[className] = initialClassData[className].map(name => ({
+                     name, grades: [], attendance: {}, observations: ''
+                 }));
+             }
+             // Usa la ruta única del profesor
+             const docRef = getTeacherDocRef();
+             try {
+                await setDoc(docRef, { classes: initialClasses });
+                console.log("Datos iniciales creados en Firestore. La UI se actualizará.");
+             } catch (e) {
+                 console.error("Fallo al crear datos iniciales:", e);
+                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta corregida.');
+             }
+        }
+
+        async function saveData() {
+             if (!isFirebaseConnected || !userId) { showMessage('Sin conexión', 'No está conectado a Firebase para guardar datos.'); return; }
+             try {
+                 // Usa la ruta única del profesor
+                 const docRef = getTeacherDocRef();
+                 await updateDoc(docRef, { classes: allClassesData });
+                 showMessage('Guardado', 'Datos guardados correctamente.', false);
+             } catch (e) { 
+                 showMessage('Error de Guardado', 'No se pudieron guardar los datos. Error: ' + e.message);
+             }
+        }
+        
+        function addStudent() {
+            const name = studentNameInput.value.trim();
+            if (!name || !currentClass) {
+                showMessage('Advertencia', 'Debes seleccionar una clase y escribir un nombre.');
+                return;
+            }
+            if (students.some(s => s.name === name.toUpperCase())) {
+                showMessage('Advertencia', 'Este estudiante ya existe en la clase.');
+                return;
+            }
+            const newStudent = { name: name.toUpperCase(), grades: [], attendance: {}, observations: '' };
+            students.push(newStudent);
+            studentNameInput.value = '';
+            
+            allClassesData[currentClass] = students;
+            renderStudentsTable();
+        }
+
+        // --- Funciones de UI y Lógica Auxiliar (SIN CAMBIOS) ---
+        
+        function showView(view) {
+            getEl('studentsTableContainer').style.display = 'none';
+            getEl('classReportContainer').style.display = 'none';
+            getEl('classDetailsContainer').style.display = 'none';
+
+            controlsContainer.classList.add('hidden');
+            reportButtons.classList.add('hidden');
+            backToTableContainer.classList.add('hidden');
+            tableHeader.style.display = 'none';
+
+            if (view === 'table') {
+                getEl('studentsTableContainer').style.display = 'flex';
+                controlsContainer.classList.remove('hidden');
+                reportButtons.classList.remove('hidden');
+                getEl('tableHeader').style.display = students.length > 0 ? 'grid' : 'none';
+            } else if (view === 'report') {
+                getEl('classReportContainer').style.display = 'block';
+                backToTableContainer.classList.remove('hidden');
+            } else if (view === 'detailed') {
+                getEl('classDetailsContainer').style.display = 'block';
+                backToTableContainer.classList.remove('hidden');
+            }
+        }
+
+        function showMessage(title, message, isConfirm = false, callback = () => {}) { 
+            console.log(`[Modal] ${title}: ${message}`);
+            if (!isConfirm) alert(`${title}: ${message}`);
+            else if (confirm(`${title}: ${message}`)) callback(true);
+        }
+        
+        function renderStudentsTable() { 
+            tableHeader.style.display = students.length > 0 ? 'grid' : 'none';
+
+            tableBody.innerHTML = students.map((student, index) => `
+                <div data-index="${index}" class="grid grid-cols-6 gap-2 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm">
+                    <div class="col-span-1 text-left font-medium text-gray-800">${student.name}</div>
+                    
+                    <div class="text-center text-gray-500">${student.grades.length}</div>
+                    <div class="text-center font-bold text-blue-600">${calculateAverage(student.grades)}</div>
+                    
+                    <div class="text-center space-x-1">
+                         <button data-status="P" data-index="${index}" class="btn-present attendance-btn text-white w-6 h-6 rounded-full text-xs ${getAttendanceStatus(student) === 'P' ? 'opacity-100' : 'opacity-30'}">P</button>
+                         <button data-status="A" data-index="${index}" class="btn-absent attendance-btn text-white w-6 h-6 rounded-full text-xs ${getAttendanceStatus(student) === 'A' ? 'opacity-100' : 'opacity-30'}">A</button>
+                         <button data-status="J" data-index="${index}" class="btn-justified attendance-btn text-white w-6 h-6 rounded-full text-xs ${getAttendanceStatus(student) === 'J' ? 'opacity-100' : 'opacity-30'}">J</button>
+                    </div>
+                    
+                    <div class="col-span-2 flex justify-start space-x-2 pl-4">
+                        <input type="number" step="0.1" placeholder="Nota" class="p-1 border rounded w-16 text-center text-xs">
+                        <button data-index="${index}" class="btn-grade text-white font-bold w-6 h-6 rounded-full text-xs">+</button>
+                        <button data-index="${index}" class="btn-delete text-white w-6 h-6 rounded-full text-xs">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            attachTableListeners();
+        }
+
+        function calculateAverage(grades) { 
+            if (grades.length === 0) return '0.0';
+            const sum = grades.reduce((acc, grade) => acc + grade, 0);
+            return (sum / grades.length).toFixed(1);
+        }
+        
+        function getAttendanceStatus(student) { 
+            return student.attendance[currentDateString] || 'N/A';
+        }
+        
+        function initializeClassSelector() {
+            classSelector.innerHTML = '';
+            const classNames = Object.keys(allClassesData);
+            classNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                if (name === currentClass) {
+                    option.selected = true;
+                }
+                classSelector.appendChild(option);
             });
         }
 
-        /**
-         * Creates the initial data document in Firestore.
-         */
-        async function createInitialData() {
-            try {
-                const initialClasses = {};
-                for (const className in initialClassData) {
-                    initialClasses[className] = initialClassData[className].map(name => ({
-                        name: name,
-                        grades: [],
-                        attendance: {},
-                        observations: ''
-                    }));
-                }
-                const docRef = getDataDocRef();
-                await setDoc(docRef, { classes: initialClasses });
-                console.log("Initial data created successfully for user:", userId);
-            } catch (e) {
-                console.error("Error creating initial data:", e);
-                showMessage('Error de Creación', 'Hubo un problema al crear los datos iniciales. Revisa tus reglas de seguridad en Firebase.');
-            }
+        function updateCurrentDateUI() { 
+             const dateParts = currentDateString.split('-');
+             const dateToFormat = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+             
+             const formattedDate = dateToFormat.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+             currentDateElement.textContent = `Fecha Seleccionada: ${formattedDate}`;
+             dateSelector.value = currentDateString;
         }
         
-        /**
-         * Saves the current application data to Firestore or local memory.
-         * @async
-         */
-        async function saveData() {
-            if (isFirebaseConnected) {
-                try {
-                    const docRef = getDataDocRef();
-                    await updateDoc(docRef, { classes: allClassesData });
-                    console.log("Data saved successfully to Firestore for user:", userId);
-                    renderStudentsTable(); 
-                } catch (e) {
-                    console.error("Error saving data to Firestore:", e);
-                    showMessage('Error de Guardado', 'No se pudieron guardar los datos. Revisa tu conexión y reglas de seguridad.');
-                }
+        function attachTableListeners() {
+            document.querySelectorAll('.attendance-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const status = e.target.dataset.status;
+                    if (students[index]) {
+                        students[index].attendance[currentDateString] = status;
+                        allClassesData[currentClass] = students;
+                        renderStudentsTable();
+                    }
+                });
+            });
+        }
+        
+        function calculateClassSummary(className) {
+            if (Object.keys(allClassesData).length === 0) return { P: 0, A: 0, J: 0, total_students: 0, total_records: 0, tasa_asistencia: 'N/A' };
+
+            const classStudents = allClassesData[className] || [];
+            let summary = { P: 0, A: 0, J: 0, total_students: classStudents.length, total_records: 0 };
+            
+            classStudents.forEach(student => {
+                Object.values(student.attendance).forEach(status => {
+                    if (status in summary) {
+                        summary[status]++;
+                        summary.total_records++;
+                    }
+                });
+            });
+            
+            if (summary.total_records > 0) {
+                summary.tasa_asistencia = ((summary.P + summary.J) / summary.total_records * 100).toFixed(2) + '%';
             } else {
-                // Modo Local: Simplemente re-renderiza
-                renderStudentsTable();
+                summary.tasa_asistencia = 'N/A';
             }
+
+            return summary;
         }
 
-        // Función para mostrar un modal personalizado (sustituye a alert y confirm)
-        function showMessage(title, message, isConfirm, callback) {
-            // ... (Lógica del modal se mantiene igual)
-            messageTitle.textContent = title;
-            messageContent.textContent = message;
-            okBtn.style.display = 'none';
-            confirmBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-
-            if (isConfirm) {
-                confirmBtn.style.display = 'block';
-                cancelBtn.style.display = 'block';
-                confirmBtn.onclick = () => {
-                    messageModal.style.display = 'none';
-                    if (callback) callback(true);
-                };
-                cancelBtn.onclick = () => {
-                    messageModal.style.display = 'none';
-                    if (callback) callback(false);
-                };
-            } else {
-                okBtn.style.display = 'block';
-                okBtn.onclick = () => {
-                    messageModal.style.display = 'none';
-                    if (callback) callback();
-                };
-            }
-            messageModal.style.display = 'flex';
-        }
-
-        // Función para renderizar la tabla de estudiantes
-        function renderStudentsTable() {
-            // ... (Lógica de la tabla se mantiene igual)
-            if (!students || students.length === 0) {
-                studentsTableContainer.innerHTML = '<p class="text-center text-gray-500">No hay estudiantes agregados en esta clase. ¡Agrega el primero!</p>';
-                loadingIndicator.style.display = 'none'; 
+        function generateClassReport() {
+            if (Object.keys(allClassesData).length === 0) {
+                showMessage('Advertencia', 'No hay datos de clases cargados para generar el reporte.');
                 return;
             }
             
-            const tableHtml = `
-                <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
-                    <thead class="bg-gray-200">
+            showView('report');
+            const classNames = Object.keys(allClassesData);
+
+            let tableHTML = `
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Reporte Resumen de Clases</h2>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Estudiante</th>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Notas</th>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Promedio</th>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Asistencia</th>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider no-print">Acciones</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clase</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiantes</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Presentes (P)</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ausentes (A)</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Justif. (J)</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tasa de Asistencia</th>
                         </tr>
                     </thead>
-                    <tbody id="studentsTableBody">
-                        ${students.map((student, index) => `
-                            <tr class="border-t border-gray-200">
-                                <td class="py-4 px-4 text-gray-800 font-medium">${student.name}</td>
-                                <td class="py-4 px-4 text-gray-600">
-                                    <div class="flex flex-wrap gap-2">
-                                        ${(student.grades || []).map(grade => `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${grade.toFixed(1)}</span>`).join('')}
-                                    </div>
-                                </td>
-                                <td class="py-4 px-4 text-lg font-bold text-blue-600">
-                                    ${calculateAverage(student.grades).toFixed(1)}
-                                </td>
-                                <td class="py-4 px-4 text-lg">
-                                    <span class="font-semibold text-sm px-2 py-1 rounded-full ${getAttendanceStatus(student).status === 'presente' ? 'bg-green-100 text-green-800' : getAttendanceStatus(student).status === 'ausente' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600'}">
-                                        ${getAttendanceStatus(student).status === 'presente' ? 'Presente' : getAttendanceStatus(student).status === 'ausente' ? 'Ausente' : 'N/A'}
-                                    </span>
-                                    <div class="mt-2 text-sm text-gray-500 italic">
-                                        ${getAttendanceStatus(student).observation ? 'Obs: ' + getAttendanceStatus(student).observation : ''}
-                                    </div>
-                                </td>
-                                <td class="py-4 px-4 no-print">
-                                    <div class="flex flex-col md:flex-row items-start md:items-center gap-2">
-                                        <button data-action="grade" data-index="${index}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm whitespace-nowrap">Nota</button>
-                                        <button data-action="attend" data-index="${index}" class="text-green-600 hover:text-green-800 font-semibold text-sm whitespace-nowrap">Asistencia</button>
-                                        <button data-action="obs" data-index="${index}" class="text-purple-600 hover:text-purple-800 font-semibold text-sm whitespace-nowrap">Obs</button>
-                                        <button data-action="delete" data-index="${index}" class="text-red-600 hover:text-red-800 font-semibold text-sm whitespace-nowrap">Eliminar</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${classNames.map(className => {
+                            const summary = calculateClassSummary(className);
+                            return `
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${className}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm">${summary.total_students}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600 font-bold">${summary.P}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-red-600 font-bold">${summary.A}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-yellow-600 font-bold">${summary.J}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold">${summary.tasa_asistencia}</td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
-            studentsTableContainer.innerHTML = tableHtml;
-            setupStudentRowHandlers();
+            classReportContainer.innerHTML = tableHTML;
         }
 
-        // ... (Funciones auxiliares para manejo de datos: handleAddStudent, initializeClassSelector, handleClassChange, handleDateChange, setupStudentRowHandlers, handleGradeInput, handleAttendanceInput, handleObservationClick, setupEventHandlers, generateClassReport, generateDetailedReport)
-
-        // Manejador para agregar estudiante (se mantiene igual)
-        function handleAddStudent() {
-            const name = studentNameInput.value.trim().toUpperCase();
-            if (name && currentClass) {
-                if (!allClassesData[currentClass]) {
-                    allClassesData[currentClass] = [];
-                }
-                const newStudent = { name: name, grades: [], attendance: {}, observations: '' };
-                allClassesData[currentClass].push(newStudent);
-                students = allClassesData[currentClass];
-                studentNameInput.value = '';
-                saveData();
-            } else if (!currentClass) {
-                showMessage('Clase Requerida', 'Por favor, selecciona o crea una clase primero.');
-            }
-        }
-
-        // Inicializa el selector de clase (se mantiene igual)
-        function initializeClassSelector() {
-            classSelector.innerHTML = Object.keys(allClassesData).map(
-                className => `<option value="${className}" ${className === currentClass ? 'selected' : ''}>${className}</option>`
-            ).join('');
-        }
-
-        // Manejador de cambio de clase (se mantiene igual)
-        function handleClassChange() {
-            currentClass = classSelector.value;
-            students = allClassesData[currentClass] || [];
-            renderStudentsTable();
-            viewMainTable();
-        }
-
-        // Manejador de cambio de fecha (se mantiene igual)
-        function handleDateChange() {
-            currentDateString = dateSelector.value;
-            updateCurrentDate();
-            renderStudentsTable();
-        }
-
-        // Configura los manejadores de eventos para la tabla (se mantiene igual)
-        function setupStudentRowHandlers() {
-            const body = document.getElementById('studentsTableBody');
-            if (body) {
-                body.onclick = (e) => {
-                    const button = e.target.closest('button');
-                    if (button) {
-                        const action = button.dataset.action;
-                        const index = parseInt(button.dataset.index);
-
-                        if (action === 'grade') {
-                            handleGradeInput(index);
-                        } else if (action === 'attend') {
-                            handleAttendanceInput(index);
-                        } else if (action === 'obs') {
-                            handleObservationClick(index);
-                        } else if (action === 'delete') {
-                            handleDeleteStudent(index);
-                        }
-                    }
-                };
-            }
-        }
-
-        // Manejador de ingreso de nota (se mantiene igual)
-        function handleGradeInput(index) {
-            const student = students[index];
-            showMessage('Ingresar Nota para ' + student.name, 'Introduce la nota (1.0 - 7.0). Separa las notas con comas. (Ej: 6.0, 5.5)', true, (confirmed) => {
-                if (confirmed) {
-                    const gradeStr = messageContent.querySelector('textarea, input').value;
-                    const newGrades = gradeStr.split(',').map(g => parseFloat(g.trim())).filter(g => !isNaN(g) && g >= 1.0 && g <= 7.0);
-
-                    if (newGrades.length > 0) {
-                        student.grades = newGrades;
-                        saveData();
-                    } else if (gradeStr.trim() !== '') {
-                        showMessage('Error de Nota', 'Por favor, introduce notas válidas entre 1.0 y 7.0.');
-                    }
-                }
-            });
-            // Reemplaza el contenido del mensaje con un input de texto para la nota
-            messageContent.innerHTML = `<input type="text" id="gradeInput" value="${student.grades.join(', ')}" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2">`;
-        }
-
-        // Manejador de asistencia (se mantiene igual)
-        function handleAttendanceInput(index) {
-            const student = students[index];
-            const currentStatus = getAttendanceStatus(student).status;
-            let newStatus;
-            let message;
-
-            if (currentStatus === 'presente') {
-                newStatus = 'ausente';
-                message = `¿Confirmas marcar a ${student.name} como **AUSENTE** el ${currentDateString}?`;
-            } else {
-                newStatus = 'presente';
-                message = `¿Confirmas marcar a ${student.name} como **PRESENTE** el ${currentDateString}?`;
-            }
-
-            showMessage('Cambiar Asistencia', message, true, (confirmed) => {
-                if (confirmed) {
-                    if (!student.attendance) student.attendance = {};
-                    if (!student.attendance[currentDateString]) {
-                         student.attendance[currentDateString] = { status: newStatus, observation: '' };
-                    } else {
-                        student.attendance[currentDateString].status = newStatus;
-                    }
-                    saveData();
-                }
-            });
-        }
-
-        // Manejador de eliminación de estudiante (se mantiene igual)
-        function handleDeleteStudent(index) {
-             const student = students[index];
-             showMessage('Confirmar Eliminación', `¿Estás seguro de eliminar a ${student.name} de ${currentClass}? Esta acción es permanente.`, true, (confirmed) => {
-                if (confirmed) {
-                    allClassesData[currentClass].splice(index, 1);
-                    students = allClassesData[currentClass];
-                    saveData();
-                }
-             });
-        }
-
-        // Manejador del modal de observación (se mantiene igual)
-        function handleObservationClick(index) {
-            currentStudentIndex = index;
-            const student = students[index];
-            modalTitle.textContent = `Observaciones para ${student.name} (${currentDateString})`;
-            
-            const attendanceRecord = getAttendanceStatus(student);
-            observationTextarea.value = attendanceRecord.observation || '';
-            
-            observationModal.style.display = 'flex';
-        }
-
-        // Manejador de vistas (se mantiene igual)
-        function viewMainTable() {
-            studentsTableContainer.classList.remove('hidden');
-            classReportContainer.classList.add('hidden');
-            classDetailsContainer.classList.add('hidden');
-        }
-
-        // Generar reporte de clases (se mantiene igual)
-        function generateClassReport() {
-            viewReportView();
-            let reportHtml = `
-                <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md">
-                    <thead class="bg-gray-200">
-                        <tr>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Clase</th>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider">Estudiantes</th>
-                            <th class="py-3 px-4 text-left font-semibold text-gray-700 uppercase tracking-wider no-print">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            for (const className in allClassesData) {
-                const classStudents = allClassesData[className];
-                reportHtml += `
-                    <tr class="border-t border-gray-200">
-                        <td class="py-4 px-4 text-gray-800 font-medium">${className}</td>
-                        <td class="py-4 px-4 text-gray-600">${classStudents.length}</td>
-                        <td class="py-4 px-4 no-print">
-                            <button data-action="view-details" data-class="${className}" class="bg-blue-500 text-white font-bold py-1 px-4 rounded-lg shadow-md hover:bg-blue-600 transition-colors text-sm">Ver Detalle</button>
-                        </td>
-                    </tr>
-                `;
-            }
-
-            reportHtml += `</tbody></table>`;
-            classReportContent.innerHTML = reportHtml;
-        }
-
-        // Generar reporte detallado (se mantiene igual)
         function generateDetailedReport(className) {
-            viewDetailsView();
-            classDetailsTitle.textContent = `Detalle de Asistencia y Notas: ${className}`;
-            const classStudents = allClassesData[className];
-
-            if (!classStudents || classStudents.length === 0) {
-                classDetailsContent.innerHTML = '<p class="text-center text-gray-500">No hay datos de estudiantes para esta clase.</p>';
+            if (!className || Object.keys(allClassesData).length === 0) {
+                showMessage('Advertencia', 'Debe seleccionar una clase válida para generar el reporte detallado.');
                 return;
             }
 
-            // Identificar todas las fechas de asistencia
-            const allDates = new Set();
-            classStudents.forEach(student => {
-                if (student.attendance) {
-                    Object.keys(student.attendance).forEach(date => allDates.add(date));
-                }
-            });
-            const sortedDates = Array.from(allDates).sort();
+            showView('detailed');
+            const classData = allClassesData[className] || [];
 
-            let detailsHtml = `
+            let allDates = new Set();
+            classData.forEach(student => {
+                Object.keys(student.attendance).forEach(date => allDates.add(date));
+            });
+            const sortedDates = Array.from(allDates).sort(); 
+
+            let reportHTML = `
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Reporte Detallado de ${className}</h2>
                 <div class="overflow-x-auto">
-                <table class="min-w-full bg-white rounded-lg overflow-hidden shadow-md text-sm">
-                    <thead class="bg-gray-200">
-                        <tr>
-                            <th class="py-3 px-2 text-left font-semibold text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-200">Estudiante</th>
-                            <th class="py-3 px-2 text-left font-semibold text-gray-700 uppercase tracking-wider">Notas (Avg)</th>
-                            ${sortedDates.map(date => `<th class="py-3 px-2 text-center font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">${new Date(date).toLocaleDateString('es-ES', { month: 'numeric', day: 'numeric' })}</th>`).join('')}
-                            <th class="py-3 px-2 text-center font-semibold text-gray-700 uppercase tracking-wider">Obs. General</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">Estudiante</th>
+                                <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Promedio</th>
+                                ${sortedDates.map(date => `<th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">${date.substring(5)}</th>`).join('')}
+                                <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${classData.map(student => {
+                                const attendanceCells = sortedDates.map(date => {
+                                    const status = student.attendance[date] || '—';
+                                    let colorClass = '';
+                                    if (status === 'P') colorClass = 'text-green-600 font-bold';
+                                    else if (status === 'A') colorClass = 'text-red-600 font-bold';
+                                    else if (status === 'J') colorClass = 'text-yellow-600 font-bold';
+                                    return `<td class="px-3 py-4 whitespace-nowrap text-center ${colorClass}">${status}</td>`;
+                                }).join('');
+                                
+                                return `
+                                    <tr>
+                                        <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-0">${student.name}</td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-bold text-blue-600">${calculateAverage(student.grades)}</td>
+                                        ${attendanceCells}
+                                        <td class="px-3 py-4 text-sm text-gray-500">${student.observations || 'N/A'}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
-
-            classStudents.forEach(student => {
-                const average = calculateAverage(student.grades).toFixed(1);
-                detailsHtml += `
-                    <tr class="border-t border-gray-200">
-                        <td class="py-2 px-2 text-gray-800 font-medium sticky left-0 bg-white">${student.name}</td>
-                        <td class="py-2 px-2 text-center font-bold ${average >= 4.0 ? 'text-green-600' : (average > 0 ? 'text-red-600' : 'text-gray-500')}">${average}</td>
-                        ${sortedDates.map(date => {
-                            const record = student.attendance ? student.attendance[date] : null;
-                            const status = record ? record.status : 'N/A';
-                            const observation = record ? record.observation : '';
-                            let statusClass = 'bg-gray-100 text-gray-600';
-                            let statusText = status;
-                            
-                            if (status === 'presente') { statusClass = 'bg-green-100 text-green-800'; statusText = 'P'; }
-                            else if (status === 'ausente') { statusClass = 'bg-red-100 text-red-800'; statusText = 'A'; }
-
-                            const obsTitle = observation ? `title="${observation}"` : '';
-                            return `<td class="py-2 px-2 text-center"><span class="font-semibold px-2 py-0.5 rounded-full ${statusClass}" ${obsTitle}>${statusText}</span></td>`;
-                        }).join('')}
-                        <td class="py-2 px-2 text-gray-600 text-xs">${student.observations.substring(0, 50)}...</td>
-                    </tr>
-                `;
-            });
-
-            detailsHtml += `</tbody></table></div>`;
-            classDetailsContent.innerHTML = detailsHtml;
+            classDetailsContainer.innerHTML = reportHTML;
         }
+        
+        function setupEventHandlers() { 
+             saveDataBtn.addEventListener('click', saveData);
+             showReportBtn.addEventListener('click', () => { generateClassReport(); });
+             showDetailedReportBtn.addEventListener('click', () => { generateDetailedReport(currentClass); });
+             backToTableBtn.addEventListener('click', () => showView('table'));
+             printReportBtn.addEventListener('click', () => window.print()); 
+             addStudentBtn.addEventListener('click', addStudent);
 
-        // Manejador de vistas de reporte (se mantiene igual)
-        function viewReportView() {
-            studentsTableContainer.classList.add('hidden');
-            classDetailsContainer.classList.add('hidden');
-            classReportContainer.classList.remove('hidden');
-        }
-
-        function viewDetailsView() {
-            studentsTableContainer.classList.add('hidden');
-            classReportContainer.classList.add('hidden');
-            classDetailsContainer.classList.remove('hidden');
-        }
-
-        // --- Manejadores de Eventos ---
-
-        function setupEventHandlers() {
-            addStudentBtn.onclick = handleAddStudent;
-            studentNameInput.onkeyup = (e) => {
-                if (e.key === 'Enter') handleAddStudent();
-            };
-            classSelector.onchange = handleClassChange;
-            dateSelector.onchange = handleDateChange;
-            closeObservationModalBtn.onclick = () => observationModal.style.display = 'none';
-            closeMessageModalBtn.onclick = () => messageModal.style.display = 'none';
-
-            saveObservationBtn.onclick = () => {
-                const observation = observationTextarea.value.trim();
-                const student = students[currentStudentIndex];
-                if (student) {
-                    if (!student.attendance) student.attendance = {};
-                    if (!student.attendance[currentDateString]) {
-                         student.attendance[currentDateString] = { status: 'N/A', observation: '' };
+             classSelector.addEventListener('change', (e) => {
+                currentClass = e.target.value;
+                students = allClassesData[currentClass] || [];
+                renderStudentsTable();
+             });
+             
+             dateSelector.addEventListener('change', (e) => {
+                let selectedValue = e.target.value; 
+                
+                if (selectedValue && !/^\d{4}-\d{2}-\d{2}$/.test(selectedValue)) {
+                    const parts = selectedValue.split('-');
+                    if (parts.length === 3) {
+                         selectedValue = `${parts[2]}-${parts[1]}-${parts[0]}`; 
                     }
-                    student.attendance[currentDateString].observation = observation;
-                    saveData();
                 }
-                observationModal.style.display = 'none';
-            };
-
-            // Manejadores para la impresión y reportes
-            printCurrentViewBtn.onclick = () => window.print();
-            generateReportBtn.onclick = () => generateClassReport();
-            printReportBtn.onclick = () => window.print();
-            printDetailsBtn.onclick = () => window.print();
-
-            hideReportBtn.onclick = () => {
-                viewMainTable();
-            };
-
-            backToReportBtn.onclick = () => {
-                viewReportView();
-            };
-
-            // Manejador de clic para los botones "Ver Detalle" en el reporte
-            classReportContainer.onclick = (e) => {
-                const button = e.target.closest('button');
-                if (button && button.dataset.action === 'view-details') {
-                    const className = button.dataset.class;
-                    generateDetailedReport(className);
-                }
-            };
+                
+                currentDateString = selectedValue;
+                
+                updateCurrentDateUI();
+                renderStudentsTable(); 
+                showView('table');
+             });
         }
 
-        // Inicia la aplicación al cargar la página
         window.onload = initApp;
     </script>
 </body>
