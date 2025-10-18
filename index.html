@@ -74,77 +74,95 @@
         <h3 class="text-xl font-bold text-gray-800">Gestion Academica en el aula</h3>
     </div>
 
-    <div class="printable-container bg-white p-8 rounded-2xl shadow-xl max-w-5xl w-full">
+    <div id="mainContainer" class="printable-container bg-white p-8 rounded-2xl shadow-xl max-w-5xl w-full">
         <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center no-print">Control de Asistencia y Calificaciones</h1>
         <p class="text-gray-500 mb-6 text-center no-print">Gestión de estudiantes, notas, asistencia y observaciones (Versión para Profesores).</p>
-        <p id="currentDate" class="text-gray-600 text-center mb-6 no-print font-bold"></p>
-
-        <div class="no-print text-center mb-4">
-             <p class="text-sm text-gray-500">
-                ID de usuario: <span id="userIdDisplay" class="font-mono text-purple-600 font-semibold break-all">Cargando...</span><br>
-                <span id="statusDisplay" class="text-xs font-medium mt-1"></span>
-             </p>
-        </div>
-
-        <div id="controlsContainer" class="no-print mb-8 space-y-4 md:space-y-0 md:flex md:justify-between md:items-end">
-             <div class="flex flex-col space-y-1">
-                <label for="classSelector" class="text-gray-700 font-medium">Seleccionar Clase</label>
-                <select id="classSelector" class="p-2 border rounded-lg shadow-sm w-48"></select>
-             </div>
-             
-             <div class="flex flex-col space-y-1">
-                <label for="dateSelector" class="text-gray-700 font-medium">Seleccionar Fecha</label>
-                <input type="date" id="dateSelector" class="p-2 border rounded-lg shadow-sm w-40">
-             </div>
-
-             <div class="flex flex-col space-y-1">
-                <label for="studentNameInput" class="text-gray-700 font-medium">Agregar Estudiante</label>
-                <div class="flex">
-                    <input type="text" id="studentNameInput" placeholder="Ej: Juan Pérez" class="p-2 border rounded-l-lg shadow-sm w-48" />
-                    <button id="addStudentBtn" class="btn-add text-white font-bold py-2 px-3 rounded-r-lg transition duration-150 shadow-md">+</button>
-                </div>
-             </div>
-             
-             <button id="saveDataBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md w-40 md:w-auto">
-                Guardar Datos
-             </button>
-        </div>
-
-        <div id="backToTableContainer" class="no-print text-center mb-6 hidden">
-             <button id="backToTableBtn" class="btn-volver text-white font-bold py-2 px-4 rounded-lg transition duration-150 mr-4">
-                Volver a la Tabla
-             </button>
-             <button id="printReportBtn" class="btn-print text-white font-bold py-2 px-4 rounded-lg transition duration-150">
-                Imprimir Reporte
-             </button>
-        </div>
-
-        <div id="studentsTableContainer" class="min-h-[200px] flex flex-col justify-start printable-container">
-            <div id="loadingIndicator" class="text-center p-10">Cargando datos...</div>
-            
-            <div id="tableHeader" class="grid grid-cols-6 gap-2 py-3 border-b-2 border-gray-300 font-bold text-gray-700 uppercase text-sm text-center">
-                <div class="col-span-1 text-left">ESTUDIANTE</div>
-                <div>NOTAS</div>
-                <div>PROMEDIO</div>
-                <div>ASISTENCIA</div>
-                <div class="col-span-2 text-left">ACCIONES</div>
+        
+        <!-- Contenedor de LOGIN (Visible por defecto) -->
+        <div id="authContainer" class="max-w-md mx-auto p-6 bg-gray-50 rounded-lg shadow-inner no-print">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Iniciar Sesión / Registrarse</h2>
+            <input type="email" id="authEmail" placeholder="Correo Electrónico" class="w-full p-3 mb-3 border rounded-lg focus:ring-indigo-500" required>
+            <input type="password" id="authPassword" placeholder="Contraseña" class="w-full p-3 mb-4 border rounded-lg focus:ring-indigo-500" required>
+            <div class="flex flex-col space-y-3">
+                <button id="signInBtn" class="bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition">Iniciar Sesión</button>
+                <button id="signUpBtn" class="bg-gray-400 text-white font-bold py-3 rounded-lg hover:bg-gray-500 transition">Registrarse</button>
             </div>
-             <div id="tableBody">
-                <!-- Contenido de la tabla renderizado por JS -->
-             </div>
+            <p id="authError" class="text-red-500 text-center mt-3 hidden">Mensaje de Error</p>
         </div>
 
-        <div id="reportButtons" class="no-print mt-8 text-center space-y-4 md:space-y-0 md:flex md:justify-center md:space-x-4">
-            <button id="showReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
-                Ver Reporte de Clases
-            </button>
-            <button id="showDetailedReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
-                Ver Reporte Detallado
-            </button>
-        </div>
+        <!-- Contenedor de la APP (Oculto por defecto) -->
+        <div id="appContent" class="hidden">
+            <p id="currentDate" class="text-gray-600 text-center mb-6 no-print font-bold"></p>
 
-        <div id="classReportContainer" class="hidden mt-8 printable-container"></div>
-        <div id="classDetailsContainer" class="hidden mt-8 printable-container"></div>
+            <div class="no-print text-center mb-4">
+                 <p class="text-sm text-gray-500">
+                    ID de usuario: <span id="userIdDisplay" class="font-mono text-purple-600 font-semibold break-all">Cargando...</span><br>
+                    <span id="statusDisplay" class="text-xs font-medium mt-1"></span>
+                 </p>
+            </div>
+
+            <div id="controlsContainer" class="no-print mb-8 space-y-4 md:space-y-0 md:flex md:justify-between md:items-end">
+                 <div class="flex flex-col space-y-1">
+                    <label for="classSelector" class="text-gray-700 font-medium">Seleccionar Clase</label>
+                    <select id="classSelector" class="p-2 border rounded-lg shadow-sm w-48"></select>
+                 </div>
+                 
+                 <div class="flex flex-col space-y-1">
+                    <label for="dateSelector" class="text-gray-700 font-medium">Seleccionar Fecha</label>
+                    <input type="date" id="dateSelector" class="p-2 border rounded-lg shadow-sm w-40">
+                 </div>
+
+                 <div class="flex flex-col space-y-1">
+                    <label for="studentNameInput" class="text-gray-700 font-medium">Agregar Estudiante</label>
+                    <div class="flex">
+                        <input type="text" id="studentNameInput" placeholder="Ej: Juan Pérez" class="p-2 border rounded-l-lg shadow-sm w-48" />
+                        <button id="addStudentBtn" class="btn-add text-white font-bold py-2 px-3 rounded-r-lg transition duration-150 shadow-md">+</button>
+                    </div>
+                 </div>
+                 
+                 <button id="saveDataBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md w-40 md:w-auto">
+                    Guardar Datos
+                 </button>
+            </div>
+
+            <div id="backToTableContainer" class="no-print text-center mb-6 hidden">
+                 <button id="backToTableBtn" class="btn-volver text-white font-bold py-2 px-4 rounded-lg transition duration-150 mr-4">
+                    Volver a la Tabla
+                 </button>
+                 <button id="printReportBtn" class="btn-print text-white font-bold py-2 px-4 rounded-lg transition duration-150">
+                    Imprimir Reporte
+                 </button>
+            </div>
+
+            <div id="studentsTableContainer" class="min-h-[200px] flex flex-col justify-start printable-container">
+                <div id="loadingIndicator" class="text-center p-10">Cargando datos...</div>
+                
+                <div id="tableHeader" class="grid grid-cols-6 gap-2 py-3 border-b-2 border-gray-300 font-bold text-gray-700 uppercase text-sm text-center">
+                    <div class="col-span-1 text-left">ESTUDIANTE</div>
+                    <div>NOTAS</div>
+                    <div>PROMEDIO</div>
+                    <div>ASISTENCIA</div>
+                    <div class="col-span-2 text-left">ACCIONES</div>
+                </div>
+                 <div id="tableBody">
+                    <!-- Contenido de la tabla renderizado por JS -->
+                 </div>
+            </div>
+
+            <div id="reportButtons" class="no-print mt-8 text-center space-y-4 md:space-y-0 md:flex md:justify-center md:space-x-4">
+                <button id="showReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
+                    Ver Reporte de Clases
+                </button>
+                <button id="showDetailedReportBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
+                    Ver Reporte Detallado
+                </button>
+            </div>
+            <button id="signOutBtn" class="mt-8 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition w-full">Cerrar Sesión</button>
+
+
+            <div id="classReportContainer" class="hidden mt-8 printable-container"></div>
+            <div id="classDetailsContainer" class="hidden mt-8 printable-container"></div>
+        </div>
         
         <!-- MODAL DE OBSERVACIONES -->
         <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
@@ -167,7 +185,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, 
+                 createUserWithEmailAndPassword, 
+                 signInWithEmailAndPassword, 
+                 signOut, 
+                 onAuthStateChanged 
+               } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Configuración de Firebase (TU CLAVE)
@@ -180,7 +203,6 @@
             appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7", 
             measurementId: "G-MYR01HM1YE"
         };
-        // *** appId ELIMINADO de esta versión para evitar el error 'appId is not defined' ***
 
         // --- Estado de la App ---
         let app, db, auth;
@@ -229,6 +251,17 @@
         const observationTextarea = getEl('observationTextarea');
         const saveObservationBtn = getEl('saveObservationBtn');
         const closeObservationModalBtn = getEl('closeObservationModalBtn');
+
+        // Auth DOM
+        const authContainer = getEl('authContainer');
+        const appContent = getEl('appContent');
+        const authEmail = getEl('authEmail');
+        const authPassword = getEl('authPassword');
+        const signInBtn = getEl('signInBtn');
+        const signUpBtn = getEl('signUpBtn');
+        const signOutBtn = getEl('signOutBtn');
+        const authError = getEl('authError');
+
 
         // --- Datos Iniciales (LISTA COMPLETA DE 7 CURSOS) ---
         const initialClassData = {
@@ -340,26 +373,87 @@
                 db = getFirestore(app);
                 isFirebaseConnected = true;
 
-                dateSelector.value = currentDateString;
-
+                // Manejar el estado de autenticación (login/logout)
                 onAuthStateChanged(auth, user => {
                     if (user) {
                         userId = user.uid;
-                        userIdDisplay.textContent = `ID de Sesión: ${userId.substring(0, 8)}...`;
-                        statusDisplay.textContent = 'Conectado a Firebase (Profesor)';
+                        authContainer.classList.add('hidden'); // Ocultar login
+                        appContent.classList.remove('hidden'); // Mostrar app
+                        
+                        userIdDisplay.textContent = `UID: ${userId.substring(0, 8)}...`;
+                        statusDisplay.textContent = 'Conectado a Firebase (Sincronizado)';
                         statusDisplay.className = 'text-xs font-medium text-green-600'; 
+                        
+                        dateSelector.value = currentDateString; // Inicializar fecha
+                        updateCurrentDateUI();
                         loadDataFromFirestore();
                     } else {
-                        signInAnonymously(auth).catch(e => console.error("Error inicio anónimo:", e));
+                        // Mostrar pantalla de Login/Registro
+                        userId = null;
+                        authContainer.classList.remove('hidden'); 
+                        appContent.classList.add('hidden');
+                        loadingIndicator.style.display = 'none'; // Ocultar carga si no hay sesión
                     }
                 });
              } catch (e) {
                  console.error("Error al iniciar Firebase:", e);
                  showMessage('Error Fatal', 'No se pudo conectar a Firebase. Verifique su configuración.');
              }
-             updateCurrentDateUI();
              setupEventHandlers();
         }
+        
+        // --- AUTENTICACIÓN ---
+        async function handleSignIn() {
+            const email = authEmail.value;
+            const password = authPassword.value;
+            authError.classList.add('hidden');
+
+            try {
+                // Intenta iniciar sesión
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged se encarga del resto
+            } catch (error) {
+                // Si el inicio de sesión falla, verifica si es error de usuario no encontrado
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                     authError.textContent = 'Correo o contraseña incorrectos.';
+                } else {
+                     authError.textContent = 'Error al iniciar sesión: ' + error.message;
+                }
+                authError.classList.remove('hidden');
+            }
+        }
+
+        async function handleSignUp() {
+            const email = authEmail.value;
+            const password = authPassword.value;
+            authError.classList.add('hidden');
+
+            if (password.length < 6) {
+                authError.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                authError.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Intenta crear el nuevo usuario
+                await createUserWithEmailAndPassword(auth, email, password);
+                showMessage('Registro Exitoso', 'Usuario creado. Iniciando sesión y creando datos iniciales.');
+                // onAuthStateChanged se encarga del resto
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    authError.textContent = 'Este correo ya está registrado. Intente iniciar sesión.';
+                } else {
+                    authError.textContent = 'Error de registro: ' + error.message;
+                }
+                authError.classList.remove('hidden');
+            }
+        }
+        
+        function handleSignOut() {
+            signOut(auth).catch(e => console.error("Error al cerrar sesión:", e));
+        }
+        // --- FIN AUTENTICACIÓN ---
+
 
         function loadDataFromFirestore() {
             try {
@@ -385,7 +479,7 @@
                             currentClass = Object.keys(allClassesData)[0];
                         }
                     } else {
-                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales para tu cuenta. Por favor, guarde una vez que la tabla aparezca.');
+                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales para tu cuenta. Por favor, guarda los datos una vez que la tabla aparezca.');
                         createInitialData(); 
                         return; 
                     }
@@ -395,7 +489,7 @@
                 }, (error) => {
                     loadingIndicator.style.display = 'none';
                     studentsTableContainer.innerHTML = `<p class="text-red-600">Error al cargar los datos: ${error.message}</p>`;
-                    showMessage('Error de Sincronización', `No se pudieron cargar los datos. Verifique que el dominio de GitHub esté autorizado y revise las reglas de Firestore.`);
+                    showMessage('Error de Sincronización', `No se pudieron cargar los datos. Verifique sus credenciales y reglas de Firestore.`);
                 });
             } catch (e) {
                 loadingIndicator.style.display = 'none';
@@ -416,12 +510,12 @@
                 console.log("Datos iniciales creados en Firestore. La UI se actualizará.");
              } catch (e) {
                  console.error("Fallo al crear datos iniciales:", e);
-                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta corregida.');
+                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR.');
              }
         }
 
         async function saveData() {
-             if (!isFirebaseConnected || !userId) { showMessage('Sin conexión', 'No está conectado a Firebase para guardar datos.'); return; }
+             if (!isFirebaseConnected || !userId) { showMessage('Sin conexión', 'Debe iniciar sesión para guardar datos.'); return; }
              try {
                  const docRef = getTeacherDocRef();
                  await setDoc(docRef, { classes: allClassesData });
@@ -749,6 +843,10 @@
         }
         
         function setupEventHandlers() { 
+             signInBtn.addEventListener('click', handleSignIn);
+             signUpBtn.addEventListener('click', handleSignUp);
+             signOutBtn.addEventListener('click', handleSignOut); // Manejador de SignOut
+
              saveDataBtn.addEventListener('click', saveData);
              showReportBtn.addEventListener('click', () => { generateClassReport(); });
              showDetailedReportBtn.addEventListener('click', () => { generateDetailedReport(currentClass); });
