@@ -176,6 +176,7 @@
             appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7", 
             measurementId: "G-MYR01HM1YE"
         };
+        // *** appId ha sido eliminado de esta versión para evitar el error de 'not defined' ***
 
         // --- Estado de la App ---
         let app, db, auth;
@@ -230,7 +231,7 @@
             "Primero Medio A": [
                 'ALBURQUENQUE DEL GRECCO EMILYA ANTONIA', 'ANABALÓN BELTRÁN BENJAMÍN NICOLÁS',
                 'CONTRERAS SALGADO HADEEY ALEJANDRA', 'FERRADA ALBORNOZ AGUSTÍN ALEXIS',
-                'IBÁÑEZ GONZÁLEZ FERNANDA MAGDALENA',
+                'HERNÁNDEZ FERNÁNDEZ DHARIEN ALEXSANDER', 'IBÁÑEZ GONZÁLEZ FERNANDA MAGDALENA',
                 'LAGOS LASTRA ALEXANDRA DANAE', 'LÓPEZ LÓPEZ LUCIANO ANTONIO',
                 'MALDONADO FLORES ANTONELLA BELÉN', 'MARIN MARÍN IGNACIO ANTONIO',
                 'MONTECINO DÍAZ VALESKA BELÉN', 'MUÑOZ CONTRERAS LUIS GABRIEL',
@@ -240,11 +241,12 @@
                 'SANTANDER LÓPEZ MARÍA JOSÉ', 'TAPIA CASTILLA JEANFRANCO PATRICK',
                 'URBINA CÁCERES FRANCHESCA POULETTE', 'VÁSQUEZ ZALDUENDO AMANDA ISABEL',
                 'ZABALAGA COFRÉ DAMIÁN ANDRÉS', 'BAEZ DONOSO LUKAS ALFONSO',
-                'MESA DÍAZ GONZALO IGNACIO'
+                'MESA DÍAZ GONZALO IGNACIO', 'BAREA SALGADO SERGIO ALEXANDER'
             ],
             "Primero Medio B": [
                 'ARAVENA ZÚÑIGA NOEMÍ JESÚS DE LAS ESTRELLAS', 'ASTUDILLO CAMPOS CRISTÓBAL ANTONIO',
-                'ASTUDILLO VÁSQUEZ BRUNO FERNANDO LEÓN','CUMINAO VIDAL CATALINA ANDREA',
+                'ASTUDILLO VÁSQUEZ BRUNO FERNANDO LEÓN', 'CASTILLO MUÑOZ RENÉ ANTONIO',
+                'CID CERDA MARÍA EVANGELINA', 'CUMINAO VIDAL CATALINA ANDREA',
                 'DÍAZ MALUENDA MIGUEL ALBERTO', 'KILTAN GONZÁLEZ DIDIER EZEQUIEL',
                 'LÓPEZ ACUÑA MARCO EMILIO', 'LÓPEZ NOVOA EYDAN DAMIÁN',
                 'MÉNDEZ SUAZO FABIÁN FELIPE', 'MOYA REYES MATEO ANTONIO BENJAMÍN',
@@ -254,7 +256,7 @@
                 'VÁSQUEZ AGUILERA SCARLET NICOLE', 'YÁÑEZ GONZÁLEZ BRAYAN DAMIÁN',
                 'VARGAS MORAGA MARTINA SAYEN', 'SALAZAR SALAS PEDRO JOSÉ',
                 'VERA BRAVO FLORENCIA ANTONIA', 'PÉREZ QUEVEDO CONSTANZA TRINIDAD',
-                'RIQUELME SANTOS BENJAMÍN ALONSO'
+                'SALGADO TOLEDO FRANCISCO JAVIER', 'RIQUELME SANTOS BENJAMÍN ALONSO'
             ],
             "Segundo Medio A": [
                 'AHUMADA ROJAS TRINIDAD BELÉN', 'ESPINOSA TORRES FERNANDA ELENA',
@@ -265,7 +267,7 @@
                 'RIVERA ABARZA CONSTANZA VICTORIA', 'SANTIS CASSEUS TEIVA SCARLETT',
                 'SOBARZO YÉVENES KATHERINNE ALEXIA BELÉN', 'TOLEDO ALBORNOZ ANTONELLA INES',
                 'VENEGAS ARRIAGADA ANTONIA EDITH', 'VIELMA ZABALAGA JOAN MANUEL',
-                'MEZA COLIMÁN ANGEL BLAS', 'SAAVEDRA BRAVO FLORENCIA ALEJANDRA'
+                'MEZA COLIMÁN ANGEL BLAS', 'PALMA ORELLANA ANTONELLA FRANCISCA'
             ],
             "Segundo Medio B": [
                 'ARAYA DOMÍNGUEZ ALEX FABIÁN', 'BRAVO MENARES ALEX JOHAN',
@@ -283,10 +285,10 @@
                 'ALCÁNTAR GARCÍA MARTINA ALEJANDRA', 'BAHAMONDE MUÑOZ ARIEL LEON',
                 'CAMPOS MUÑOZ CRISTOPHER JESÚS', 'CANCINO ORÓSTICA VICENTE GASPAR',
                 'CARRASCO GONZÁLEZ CAMILA ANDREA', 'COFRÉ CASTILLO ANTONIO ANDRÉS',
-                'GALDAMES VERGARA FELIPE ESTEBAN',
+                'CONTRERAS VENEGAS BELÉN ALEJANDRA', 'GALDAMES VERGARA FELIPE ESTEBAN',
                 'GARCÍA GONZÁLEZ SANTIAGO HUMBERTO', 'GONZÁLEZ AMIGO FRANCISCA IGNACIA',
                 'GONZÁLEZ SALAZAR JOAQUÍN ALONSO', 'GUTIÉRREZ GUTIÉRREZ ANGEL MARTÍN',
-                'MARTÍNEZ LIZANA AARON ALEJANDRO',
+                'JARA SEPÚLVEDA KATRINA DARINKA', 'MARTÍNEZ LIZANA AARON ALEJANDRO',
                 'MEZA CARRASCO BENJAMÍN INTI', 'MIÑO GONZALEZ CATALINA ANDREA',
                 'MORAGA PACHECO RENATO IGNACIO', 'PÉREZ CORÓN MANUEL IGNACIO',
                 'SAMANIEGO CORTEZ JAKSON FERGIE', 'SEPÚLVEDA SALAZAR SOFÍA ANTONIA',
@@ -319,11 +321,11 @@
                 'Josefa Morales', 'Benjamín Pérez', 'Constanza Varela'
             ],
         };
-
-        // --- RUTA PRIVADA ORIGINAL ---
-        function getMyPrivateDocRef() {
-            // RUTA DE LA VERSIÓN PRIVADA (ARTIFACTS)
-            return doc(db, `artifacts/${appId}/public/data/calificaciones/master_data`);
+        
+        // --- FUNCIÓN CLAVE PARA LA RUTA ÚNICA DEL PROFESOR ---
+        function getTeacherDocRef() {
+            // RUTA DE 4 SEGMENTOS: /registros_publicos/{userId}/coleccion_datos/datos_maestros
+            return doc(db, `registros_publicos/${userId}/coleccion_datos/datos_maestros`);
         }
         // --------------------------------------------------------
 
@@ -340,7 +342,7 @@
                     if (user) {
                         userId = user.uid;
                         userIdDisplay.textContent = `ID de Sesión: ${userId.substring(0, 8)}...`;
-                        statusDisplay.textContent = 'Conectado a Firebase (Admin)';
+                        statusDisplay.textContent = 'Conectado a Firebase (Profesor)';
                         statusDisplay.className = 'text-xs font-medium text-green-600'; 
                         loadDataFromFirestore();
                     } else {
@@ -357,8 +359,7 @@
 
         function loadDataFromFirestore() {
             try {
-                // USAR RUTA PRIVADA
-                const docRef = getMyPrivateDocRef(); 
+                const docRef = getTeacherDocRef(); 
 
                 onSnapshot(docRef, (docSnap) => {
                     loadingIndicator.style.display = 'none';
@@ -368,7 +369,7 @@
                             currentClass = Object.keys(allClassesData)[0];
                         }
                     } else {
-                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales. Por favor, guarde una vez que la tabla aparezca.');
+                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales para tu cuenta. Por favor, guarde una vez que la tabla aparezca.');
                         createInitialData(); 
                         return; 
                     }
@@ -378,7 +379,7 @@
                 }, (error) => {
                     loadingIndicator.style.display = 'none';
                     studentsTableContainer.innerHTML = `<p class="text-red-600">Error al cargar los datos: ${error.message}</p>`;
-                    showMessage('Error de Sincronización', `No se pudieron cargar los datos. Error: ${error.message}`);
+                    showMessage('Error de Sincronización', `No se pudieron cargar los datos. Verifique que el dominio de GitHub esté autorizado y revise las reglas de Firestore.`);
                 });
             } catch (e) {
                 loadingIndicator.style.display = 'none';
@@ -393,22 +394,20 @@
                      name, grades: [], attendance: {}, observations: ''
                  }));
              }
-             // USAR RUTA PRIVADA
-             const docRef = getMyPrivateDocRef();
+             const docRef = getTeacherDocRef();
              try {
                 await setDoc(docRef, { classes: initialClasses });
                 console.log("Datos iniciales creados en Firestore. La UI se actualizará.");
              } catch (e) {
                  console.error("Fallo al crear datos iniciales:", e);
-                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta de artifacts.');
+                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta corregida.');
              }
         }
 
         async function saveData() {
-             if (!isFirebaseConnected || !appId) { showMessage('Sin conexión', 'No está conectado a Firebase para guardar datos.'); return; }
+             if (!isFirebaseConnected || !userId) { showMessage('Sin conexión', 'No está conectado a Firebase para guardar datos.'); return; }
              try {
-                 // ** CORRECCIÓN DE GUARDADO: USAR setDoc para sobrescribir **
-                 const docRef = getMyPrivateDocRef();
+                 const docRef = getTeacherDocRef();
                  await setDoc(docRef, { classes: allClassesData });
                  showMessage('Guardado', 'Datos guardados correctamente.', false);
              } catch (e) { 
@@ -668,68 +667,6 @@
                 </div>
             `;
             classDetailsContainer.innerHTML = reportHTML;
-        }
-        
-        function attachTableListeners() {
-            // 1. Lógica de Asistencia
-            document.querySelectorAll('.attendance-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.dataset.index);
-                    const status = e.target.dataset.status;
-                    if (students[index]) {
-                        students[index].attendance[currentDateString] = status;
-                        allClassesData[currentClass] = students;
-                        renderStudentsTable();
-                    }
-                });
-            });
-            
-            // 2. Lógica: Añadir Notas
-            document.querySelectorAll('.btn-grade').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const studentIndex = parseInt(e.target.dataset.index);
-                    const inputField = e.target.previousElementSibling; 
-                    const gradeValue = parseFloat(inputField.value);
-                    
-                    if (isNaN(gradeValue) || gradeValue < 1.0 || gradeValue > 7.0) {
-                        showMessage('Advertencia de Nota', 'Por favor, ingrese una nota válida entre 1.0 y 7.0.');
-                        return;
-                    }
-
-                    if (students[studentIndex]) {
-                        students[studentIndex].grades.push(gradeValue);
-                        allClassesData[currentClass] = students;
-                        inputField.value = '';
-                        renderStudentsTable();
-                        showMessage('Nota Registrada', `Nota ${gradeValue.toFixed(1)} registrada para ${students[studentIndex].name}. NO OLVIDE hacer clic en 'Guardar Datos' para hacerla permanente.`, false);
-                    }
-                });
-            });
-
-            // 3. Lógica: Eliminar Estudiante
-            document.querySelectorAll('.btn-delete').forEach(button => {
-                 button.addEventListener('click', (e) => {
-                    const studentIndex = parseInt(e.target.dataset.index);
-                    const studentName = students[studentIndex].name;
-                    
-                    showMessage('Confirmar Eliminación', `¿Estás seguro de que quieres eliminar a ${studentName}? ESTO NO SE PUEDE DESHACER.`, true, (confirmed) => {
-                        if (confirmed) {
-                           students.splice(studentIndex, 1);
-                           allClassesData[currentClass] = students;
-                           renderStudentsTable();
-                           showMessage('Estudiante Eliminado', `${studentName} ha sido eliminado. Recuerda hacer clic en 'Guardar Datos'.`, false);
-                        }
-                    });
-                });
-            });
-
-            // 4. Lógica: Abrir Modal de Observaciones
-            document.querySelectorAll('.observation-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.dataset.index);
-                    openObservationModal(index);
-                });
-            });
         }
         
         function setupEventHandlers() { 
