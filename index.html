@@ -69,6 +69,7 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
+    <!-- ENCABEZADO DE IMPRESIÓN -->
     <div id="printHeader" class="print-only">
         <h3 class="text-xl font-bold text-gray-800">Gestion Academica en el aula</h3>
     </div>
@@ -129,7 +130,8 @@
                 <div class="col-span-2 text-left">ACCIONES</div>
             </div>
              <div id="tableBody">
-                </div>
+                <!-- Contenido de la tabla renderizado por JS -->
+             </div>
         </div>
 
         <div id="reportButtons" class="no-print mt-8 text-center space-y-4 md:space-y-0 md:flex md:justify-center md:space-x-4">
@@ -144,6 +146,7 @@
         <div id="classReportContainer" class="hidden mt-8 printable-container"></div>
         <div id="classDetailsContainer" class="hidden mt-8 printable-container"></div>
         
+        <!-- MODAL DE OBSERVACIONES -->
         <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
             <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
                 <h3 id="modalTitle" class="text-xl font-bold mb-4 text-gray-800">Observaciones para [Estudiante]</h3>
@@ -157,6 +160,7 @@
         <div id="messageModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"></div>
     </div>
     
+    <!-- PIE DE PÁGINA DE IMPRESIÓN -->
     <div id="printFooter" class="print-only text-gray-500">
         Desarrollado por ProfeAle
     </div>
@@ -176,7 +180,7 @@
             appId: "1:552398254230:web:c58dd07e5ceeb67e0912b7", 
             measurementId: "G-MYR01HM1YE"
         };
-        // *** appId ha sido eliminado de esta versión para evitar el error de 'not defined' ***
+        // *** appId ELIMINADO de esta versión para evitar el error 'appId is not defined' ***
 
         // --- Estado de la App ---
         let app, db, auth;
@@ -365,6 +369,18 @@
                     loadingIndicator.style.display = 'none';
                     if (docSnap.exists() && docSnap.data().classes) {
                         allClassesData = docSnap.data().classes;
+                        
+                        // *** FIX CLAVE: Inicializar grades y observations al cargar los datos ***
+                        for (const className in allClassesData) {
+                            allClassesData[className] = allClassesData[className].map(student => ({
+                                name: student.name,
+                                grades: student.grades || [], // Asegurar array
+                                attendance: student.attendance || {},
+                                observations: student.observations || '' // Asegurar string
+                            }));
+                        }
+                        // *** FIN FIX CLAVE ***
+
                         if (!currentClass || !allClassesData[currentClass]) {
                             currentClass = Object.keys(allClassesData)[0];
                         }
@@ -485,6 +501,7 @@
                         <input type="number" step="0.1" placeholder="Nota" class="p-1 border rounded w-16 text-center text-xs">
                         <button data-index="${index}" class="btn-grade text-white font-bold w-6 h-6 rounded-full text-xs">+</button>
                         <button data-index="${index}" class="btn-delete text-white w-6 h-6 rounded-full text-xs">🗑️</button>
+                        <!-- Botón de Observación -->
                         <button data-index="${index}" class="observation-btn text-indigo-600 hover:text-indigo-900 w-6 h-6 rounded-full text-xs">
                            ${student.observations ? '📝' : '💬'} 
                         </button>
