@@ -144,7 +144,16 @@
         <div id="classReportContainer" class="hidden mt-8 printable-container"></div>
         <div id="classDetailsContainer" class="hidden mt-8 printable-container"></div>
         
-        <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"></div>
+        <div id="observationModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                <h3 id="modalTitle" class="text-xl font-bold mb-4 text-gray-800">Observaciones para [Estudiante]</h3>
+                <textarea id="observationTextarea" class="w-full p-3 border rounded-lg h-32 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Escribe aquí las observaciones..."></textarea>
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button id="closeObservationModalBtn" class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-400">Cerrar</button>
+                    <button id="saveObservationBtn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Guardar Observación</button>
+                </div>
+            </div>
+        </div>
         <div id="messageModal" class="no-print fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50"></div>
     </div>
     
@@ -182,6 +191,7 @@
         let currentClass = null;
         let students = [];
         let userId;
+        let currentStudentIndex = -1; // Para rastrear el estudiante en el modal
 
         // --- DOM Elements ---
         function getEl(id) { return document.getElementById(id); }
@@ -208,6 +218,13 @@
         const reportButtons = getEl('reportButtons');
         const backToTableContainer = getEl('backToTableContainer');
         const messageModal = getEl('messageModal'); 
+
+        // --- Observación Modal DOM ---
+        const observationModal = getEl('observationModal');
+        const modalTitle = getEl('modalTitle');
+        const observationTextarea = getEl('observationTextarea');
+        const saveObservationBtn = getEl('saveObservationBtn');
+        const closeObservationModalBtn = getEl('closeObservationModalBtn');
 
         // --- Datos Iniciales (LISTA COMPLETA DE 7 CURSOS) ---
         const initialClassData = {
@@ -307,7 +324,7 @@
 
         // --- FUNCIÓN CLAVE PARA LA RUTA ÚNICA DEL PROFESOR ---
         function getTeacherDocRef() {
-            // RUTA: /registros_publicos/{userId}/coleccion_datos/datos_maestros
+            // RUTA DE 4 SEGMENTOS: /registros_publicos/{userId}/coleccion_datos/datos_maestros
             return doc(db, `registros_publicos/${userId}/coleccion_datos/datos_maestros`);
         }
         // --------------------------------------------------------
@@ -352,6 +369,7 @@
                             currentClass = Object.keys(allClassesData)[0];
                         }
                     } else {
+                        // El documento no existe para este nuevo profesor, lo creamos.
                         showMessage('Creación de Datos', 'Creando la lista de clases iniciales para tu cuenta. Por favor, guarde una vez que la tabla aparezca.');
                         createInitialData(); 
                         return; 
@@ -383,7 +401,7 @@
                 console.log("Datos iniciales creados en Firestore. La UI se actualizará.");
              } catch (e) {
                  console.error("Fallo al crear datos iniciales:", e);
-                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique las reglas de seguridad de Firestore.');
+                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta corregida.');
              }
         }
 
@@ -417,7 +435,7 @@
             renderStudentsTable();
         }
 
-        // --- Funciones de UI y Lógica Auxiliar (Mismas que la privada) ---
+        // --- Funciones de UI y Lógica Auxiliar ---
         
         function showView(view) {
             getEl('studentsTableContainer').style.display = 'none';
@@ -469,6 +487,9 @@
                         <input type="number" step="0.1" placeholder="Nota" class="p-1 border rounded w-16 text-center text-xs">
                         <button data-index="${index}" class="btn-grade text-white font-bold w-6 h-6 rounded-full text-xs">+</button>
                         <button data-index="${index}" class="btn-delete text-white w-6 h-6 rounded-full text-xs">🗑️</button>
+                        <button data-index="${index}" class="observation-btn text-indigo-600 hover:text-indigo-900 w-6 h-6 rounded-full text-xs">
+                           ${student.observations ? '📝' : '💬'} 
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -509,7 +530,31 @@
              dateSelector.value = currentDateString;
         }
         
-        // --- FUNCIÓN CORREGIDA: Incluye lógica de Notas y Borrado ---
+        // --- LÓGICA DEL MODAL DE OBSERVACIONES ---
+
+        function openObservationModal(studentIndex) {
+            currentStudentIndex = studentIndex;
+            const student = students[studentIndex];
+            
+            modalTitle.textContent = `Observaciones para: ${student.name}`;
+            observationTextarea.value = student.observations || '';
+            observationModal.style.display = 'flex';
+        }
+
+        function saveObservation() {
+            if (currentStudentIndex !== -1) {
+                const student = students[currentStudentIndex];
+                student.observations = observationTextarea.value.trim();
+                allClassesData[currentClass] = students;
+                
+                // Cierra el modal y actualiza la tabla para mostrar el ícono
+                closeObservationModalBtn.click(); 
+                renderStudentsTable(); 
+                showMessage('Observación Guardada', `Observación registrada para ${student.name}. Recuerda hacer clic en 'Guardar Datos'.`, false);
+            }
+        }
+        // --- FIN LÓGICA DEL MODAL DE OBSERVACIONES ---
+
         function attachTableListeners() {
             // 1. Lógica de Asistencia
             document.querySelectorAll('.attendance-btn').forEach(button => {
@@ -562,9 +607,16 @@
                     });
                 });
             });
-        }
-        // --- FIN FUNCIÓN CORREGIDA ---
 
+            // 4. Lógica: Abrir Modal de Observaciones
+            document.querySelectorAll('.observation-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const studentIndex = parseInt(e.target.dataset.index);
+                    openObservationModal(studentIndex);
+                });
+            });
+        }
+        
         function calculateClassSummary(className) {
             if (Object.keys(allClassesData).length === 0) return { P: 0, A: 0, J: 0, total_students: 0, total_records: 0, tasa_asistencia: 'N/A' };
 
@@ -692,6 +744,10 @@
              backToTableBtn.addEventListener('click', () => showView('table'));
              printReportBtn.addEventListener('click', () => window.print()); 
              addStudentBtn.addEventListener('click', addStudent);
+
+             // Manejadores para el modal de Observaciones
+             closeObservationModalBtn.addEventListener('click', () => observationModal.style.display = 'none');
+             saveObservationBtn.addEventListener('click', saveObservation);
 
              classSelector.addEventListener('change', (e) => {
                 currentClass = e.target.value;
