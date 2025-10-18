@@ -321,7 +321,7 @@
                 'Josefa Morales', 'Benjamín Pérez', 'Constanza Varela'
             ],
         };
-        
+
         // --- FUNCIÓN CLAVE PARA LA RUTA ÚNICA DEL PROFESOR ---
         function getTeacherDocRef() {
             // RUTA DE 4 SEGMENTOS: /registros_publicos/{userId}/coleccion_datos/datos_maestros
@@ -667,6 +667,68 @@
                 </div>
             `;
             classDetailsContainer.innerHTML = reportHTML;
+        }
+        
+        function attachTableListeners() {
+            // 1. Lógica de Asistencia
+            document.querySelectorAll('.attendance-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const status = e.target.dataset.status;
+                    if (students[index]) {
+                        students[index].attendance[currentDateString] = status;
+                        allClassesData[currentClass] = students;
+                        renderStudentsTable();
+                    }
+                });
+            });
+            
+            // 2. Lógica: Añadir Notas
+            document.querySelectorAll('.btn-grade').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const studentIndex = parseInt(e.target.dataset.index);
+                    const inputField = e.target.previousElementSibling; 
+                    const gradeValue = parseFloat(inputField.value);
+                    
+                    if (isNaN(gradeValue) || gradeValue < 1.0 || gradeValue > 7.0) {
+                        showMessage('Advertencia de Nota', 'Por favor, ingrese una nota válida entre 1.0 y 7.0.');
+                        return;
+                    }
+
+                    if (students[studentIndex]) {
+                        students[studentIndex].grades.push(gradeValue);
+                        allClassesData[currentClass] = students;
+                        inputField.value = '';
+                        renderStudentsTable();
+                        showMessage('Nota Registrada', `Nota ${gradeValue.toFixed(1)} registrada para ${students[studentIndex].name}. NO OLVIDE hacer clic en 'Guardar Datos' para hacerla permanente.`, false);
+                    }
+                });
+            });
+
+            // 3. Lógica: Eliminar Estudiante
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                 button.addEventListener('click', (e) => {
+                    const studentIndex = parseInt(e.target.dataset.index);
+                    const studentName = students[studentIndex].name;
+                    
+                    showMessage('Confirmar Eliminación', `¿Estás seguro de que quieres eliminar a ${studentName}? ESTO NO SE PUEDE DESHACER.`, true, (confirmed) => {
+                        if (confirmed) {
+                           students.splice(studentIndex, 1);
+                           allClassesData[currentClass] = students;
+                           renderStudentsTable();
+                           showMessage('Estudiante Eliminado', `${studentName} ha sido eliminado. Recuerda hacer clic en 'Guardar Datos'.`, false);
+                        }
+                    });
+                });
+            });
+
+            // 4. Lógica: Abrir Modal de Observaciones
+            document.querySelectorAll('.observation-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    openObservationModal(index);
+                });
+            });
         }
         
         function setupEventHandlers() { 
