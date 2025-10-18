@@ -191,7 +191,7 @@
         let currentClass = null;
         let students = [];
         let userId;
-        let currentStudentIndex = -1; // Para rastrear el estudiante en el modal
+        let currentStudentIndex = -1;
 
         // --- DOM Elements ---
         function getEl(id) { return document.getElementById(id); }
@@ -218,8 +218,7 @@
         const reportButtons = getEl('reportButtons');
         const backToTableContainer = getEl('backToTableContainer');
         const messageModal = getEl('messageModal'); 
-
-        // --- Observación Modal DOM ---
+        
         const observationModal = getEl('observationModal');
         const modalTitle = getEl('modalTitle');
         const observationTextarea = getEl('observationTextarea');
@@ -231,7 +230,7 @@
             "Primero Medio A": [
                 'ALBURQUENQUE DEL GRECCO EMILYA ANTONIA', 'ANABALÓN BELTRÁN BENJAMÍN NICOLÁS',
                 'CONTRERAS SALGADO HADEEY ALEJANDRA', 'FERRADA ALBORNOZ AGUSTÍN ALEXIS',
-                'HERNÁNDEZ FERNÁNDEZ DHARIEN ALEXSANDER', 'IBÁÑEZ GONZÁLEZ FERNANDA MAGDALENA',
+                'IBÁÑEZ GONZÁLEZ FERNANDA MAGDALENA',
                 'LAGOS LASTRA ALEXANDRA DANAE', 'LÓPEZ LÓPEZ LUCIANO ANTONIO',
                 'MALDONADO FLORES ANTONELLA BELÉN', 'MARIN MARÍN IGNACIO ANTONIO',
                 'MONTECINO DÍAZ VALESKA BELÉN', 'MUÑOZ CONTRERAS LUIS GABRIEL',
@@ -241,12 +240,11 @@
                 'SANTANDER LÓPEZ MARÍA JOSÉ', 'TAPIA CASTILLA JEANFRANCO PATRICK',
                 'URBINA CÁCERES FRANCHESCA POULETTE', 'VÁSQUEZ ZALDUENDO AMANDA ISABEL',
                 'ZABALAGA COFRÉ DAMIÁN ANDRÉS', 'BAEZ DONOSO LUKAS ALFONSO',
-                'MESA DÍAZ GONZALO IGNACIO', 'BAREA SALGADO SERGIO ALEXANDER'
+                'MESA DÍAZ GONZALO IGNACIO'
             ],
             "Primero Medio B": [
                 'ARAVENA ZÚÑIGA NOEMÍ JESÚS DE LAS ESTRELLAS', 'ASTUDILLO CAMPOS CRISTÓBAL ANTONIO',
-                'ASTUDILLO VÁSQUEZ BRUNO FERNANDO LEÓN', 'CASTILLO MUÑOZ RENÉ ANTONIO',
-                'CID CERDA MARÍA EVANGELINA', 'CUMINAO VIDAL CATALINA ANDREA',
+                'ASTUDILLO VÁSQUEZ BRUNO FERNANDO LEÓN','CUMINAO VIDAL CATALINA ANDREA',
                 'DÍAZ MALUENDA MIGUEL ALBERTO', 'KILTAN GONZÁLEZ DIDIER EZEQUIEL',
                 'LÓPEZ ACUÑA MARCO EMILIO', 'LÓPEZ NOVOA EYDAN DAMIÁN',
                 'MÉNDEZ SUAZO FABIÁN FELIPE', 'MOYA REYES MATEO ANTONIO BENJAMÍN',
@@ -256,7 +254,7 @@
                 'VÁSQUEZ AGUILERA SCARLET NICOLE', 'YÁÑEZ GONZÁLEZ BRAYAN DAMIÁN',
                 'VARGAS MORAGA MARTINA SAYEN', 'SALAZAR SALAS PEDRO JOSÉ',
                 'VERA BRAVO FLORENCIA ANTONIA', 'PÉREZ QUEVEDO CONSTANZA TRINIDAD',
-                'SALGADO TOLEDO FRANCISCO JAVIER', 'RIQUELME SANTOS BENJAMÍN ALONSO'
+                'RIQUELME SANTOS BENJAMÍN ALONSO'
             ],
             "Segundo Medio A": [
                 'AHUMADA ROJAS TRINIDAD BELÉN', 'ESPINOSA TORRES FERNANDA ELENA',
@@ -267,7 +265,7 @@
                 'RIVERA ABARZA CONSTANZA VICTORIA', 'SANTIS CASSEUS TEIVA SCARLETT',
                 'SOBARZO YÉVENES KATHERINNE ALEXIA BELÉN', 'TOLEDO ALBORNOZ ANTONELLA INES',
                 'VENEGAS ARRIAGADA ANTONIA EDITH', 'VIELMA ZABALAGA JOAN MANUEL',
-                'MEZA COLIMÁN ANGEL BLAS', 'PALMA ORELLANA ANTONELLA FRANCISCA'
+                'MEZA COLIMÁN ANGEL BLAS', 'SAAVEDRA BRAVO FLORENCIA ALEJANDRA'
             ],
             "Segundo Medio B": [
                 'ARAYA DOMÍNGUEZ ALEX FABIÁN', 'BRAVO MENARES ALEX JOHAN',
@@ -285,10 +283,10 @@
                 'ALCÁNTAR GARCÍA MARTINA ALEJANDRA', 'BAHAMONDE MUÑOZ ARIEL LEON',
                 'CAMPOS MUÑOZ CRISTOPHER JESÚS', 'CANCINO ORÓSTICA VICENTE GASPAR',
                 'CARRASCO GONZÁLEZ CAMILA ANDREA', 'COFRÉ CASTILLO ANTONIO ANDRÉS',
-                'CONTRERAS VENEGAS BELÉN ALEJANDRA', 'GALDAMES VERGARA FELIPE ESTEBAN',
+                'GALDAMES VERGARA FELIPE ESTEBAN',
                 'GARCÍA GONZÁLEZ SANTIAGO HUMBERTO', 'GONZÁLEZ AMIGO FRANCISCA IGNACIA',
                 'GONZÁLEZ SALAZAR JOAQUÍN ALONSO', 'GUTIÉRREZ GUTIÉRREZ ANGEL MARTÍN',
-                'JARA SEPÚLVEDA KATRINA DARINKA', 'MARTÍNEZ LIZANA AARON ALEJANDRO',
+                'MARTÍNEZ LIZANA AARON ALEJANDRO',
                 'MEZA CARRASCO BENJAMÍN INTI', 'MIÑO GONZALEZ CATALINA ANDREA',
                 'MORAGA PACHECO RENATO IGNACIO', 'PÉREZ CORÓN MANUEL IGNACIO',
                 'SAMANIEGO CORTEZ JAKSON FERGIE', 'SEPÚLVEDA SALAZAR SOFÍA ANTONIA',
@@ -322,10 +320,10 @@
             ],
         };
 
-        // --- FUNCIÓN CLAVE PARA LA RUTA ÚNICA DEL PROFESOR ---
-        function getTeacherDocRef() {
-            // RUTA DE 4 SEGMENTOS: /registros_publicos/{userId}/coleccion_datos/datos_maestros
-            return doc(db, `registros_publicos/${userId}/coleccion_datos/datos_maestros`);
+        // --- RUTA PRIVADA ORIGINAL ---
+        function getMyPrivateDocRef() {
+            // RUTA DE LA VERSIÓN PRIVADA (ARTIFACTS)
+            return doc(db, `artifacts/${appId}/public/data/calificaciones/master_data`);
         }
         // --------------------------------------------------------
 
@@ -342,7 +340,7 @@
                     if (user) {
                         userId = user.uid;
                         userIdDisplay.textContent = `ID de Sesión: ${userId.substring(0, 8)}...`;
-                        statusDisplay.textContent = 'Conectado a Firebase (Profesor)';
+                        statusDisplay.textContent = 'Conectado a Firebase (Admin)';
                         statusDisplay.className = 'text-xs font-medium text-green-600'; 
                         loadDataFromFirestore();
                     } else {
@@ -359,7 +357,8 @@
 
         function loadDataFromFirestore() {
             try {
-                const docRef = getTeacherDocRef(); 
+                // USAR RUTA PRIVADA
+                const docRef = getMyPrivateDocRef(); 
 
                 onSnapshot(docRef, (docSnap) => {
                     loadingIndicator.style.display = 'none';
@@ -369,8 +368,7 @@
                             currentClass = Object.keys(allClassesData)[0];
                         }
                     } else {
-                        // El documento no existe para este nuevo profesor, lo creamos.
-                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales para tu cuenta. Por favor, guarde una vez que la tabla aparezca.');
+                        showMessage('Creación de Datos', 'Creando la lista de clases iniciales. Por favor, guarde una vez que la tabla aparezca.');
                         createInitialData(); 
                         return; 
                     }
@@ -380,7 +378,7 @@
                 }, (error) => {
                     loadingIndicator.style.display = 'none';
                     studentsTableContainer.innerHTML = `<p class="text-red-600">Error al cargar los datos: ${error.message}</p>`;
-                    showMessage('Error de Sincronización', `No se pudieron cargar los datos. Verifique que el dominio de GitHub esté autorizado en la consola de Firebase.`);
+                    showMessage('Error de Sincronización', `No se pudieron cargar los datos. Error: ${error.message}`);
                 });
             } catch (e) {
                 loadingIndicator.style.display = 'none';
@@ -395,21 +393,22 @@
                      name, grades: [], attendance: {}, observations: ''
                  }));
              }
-             const docRef = getTeacherDocRef();
+             // USAR RUTA PRIVADA
+             const docRef = getMyPrivateDocRef();
              try {
                 await setDoc(docRef, { classes: initialClasses });
                 console.log("Datos iniciales creados en Firestore. La UI se actualizará.");
              } catch (e) {
                  console.error("Fallo al crear datos iniciales:", e);
-                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta corregida.');
+                 showMessage('Error de Escritura', 'No se pudo crear la data inicial. Verifique que sus reglas de seguridad permitan CREAR/ESCRIBIR en la ruta de artifacts.');
              }
         }
 
         async function saveData() {
-             if (!isFirebaseConnected || !userId) { showMessage('Sin conexión', 'No está conectado a Firebase para guardar datos.'); return; }
+             if (!isFirebaseConnected || !appId) { showMessage('Sin conexión', 'No está conectado a Firebase para guardar datos.'); return; }
              try {
-                 const docRef = getTeacherDocRef();
-                 // USAMOS setDoc para sobrescribir y eliminar permanentemente los estudiantes borrados
+                 // ** CORRECCIÓN DE GUARDADO: USAR setDoc para sobrescribir **
+                 const docRef = getMyPrivateDocRef();
                  await setDoc(docRef, { classes: allClassesData });
                  showMessage('Guardado', 'Datos guardados correctamente.', false);
              } catch (e) { 
@@ -530,8 +529,6 @@
              dateSelector.value = currentDateString;
         }
         
-        // --- LÓGICA DEL MODAL DE OBSERVACIONES ---
-
         function openObservationModal(studentIndex) {
             currentStudentIndex = studentIndex;
             const student = students[studentIndex];
@@ -547,76 +544,12 @@
                 student.observations = observationTextarea.value.trim();
                 allClassesData[currentClass] = students;
                 
-                // Cierra el modal y actualiza la tabla para mostrar el ícono
                 closeObservationModalBtn.click(); 
                 renderStudentsTable(); 
-                showMessage('Observación Guardada', `Observación registrada para ${student.name}. Recuerda hacer clic en 'Guardar Datos'.`, false);
+                showMessage('Observación Guardada', `Observación registrada para ${student.name}. NO OLVIDE hacer clic en 'Guardar Datos' para hacerla permanente.`, false);
             }
         }
-        // --- FIN LÓGICA DEL MODAL DE OBSERVACIONES ---
 
-        function attachTableListeners() {
-            // 1. Lógica de Asistencia
-            document.querySelectorAll('.attendance-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.dataset.index);
-                    const status = e.target.dataset.status;
-                    if (students[index]) {
-                        students[index].attendance[currentDateString] = status;
-                        allClassesData[currentClass] = students;
-                        renderStudentsTable();
-                    }
-                });
-            });
-            
-            // 2. Lógica: Añadir Notas
-            document.querySelectorAll('.btn-grade').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const studentIndex = parseInt(e.target.dataset.index);
-                    const inputField = e.target.previousElementSibling; 
-                    const gradeValue = parseFloat(inputField.value);
-                    
-                    if (isNaN(gradeValue) || gradeValue < 1.0 || gradeValue > 7.0) {
-                        showMessage('Advertencia de Nota', 'Por favor, ingrese una nota válida entre 1.0 y 7.0.');
-                        return;
-                    }
-
-                    if (students[studentIndex]) {
-                        students[studentIndex].grades.push(gradeValue);
-                        allClassesData[currentClass] = students;
-                        inputField.value = '';
-                        renderStudentsTable();
-                        showMessage('Nota Registrada', `Nota ${gradeValue.toFixed(1)} registrada para ${students[studentIndex].name}. NO OLVIDE hacer clic en 'Guardar Datos' para hacerla permanente.`, false);
-                    }
-                });
-            });
-
-            // 3. Lógica: Eliminar Estudiante
-            document.querySelectorAll('.btn-delete').forEach(button => {
-                 button.addEventListener('click', (e) => {
-                    const studentIndex = parseInt(e.target.dataset.index);
-                    const studentName = students[studentIndex].name;
-                    
-                    showMessage('Confirmar Eliminación', `¿Estás seguro de que quieres eliminar a ${studentName}? ESTO NO SE PUEDE DESHACER.`, true, (confirmed) => {
-                        if (confirmed) {
-                           students.splice(studentIndex, 1);
-                           allClassesData[currentClass] = students;
-                           renderStudentsTable();
-                           showMessage('Estudiante Eliminado', `${studentName} ha sido eliminado. Recuerda hacer clic en 'Guardar Datos'.`, false);
-                        }
-                    });
-                });
-            });
-
-            // 4. Lógica: Abrir Modal de Observaciones
-            document.querySelectorAll('.observation-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const studentIndex = parseInt(e.target.dataset.index);
-                    openObservationModal(studentIndex);
-                });
-            });
-        }
-        
         function calculateClassSummary(className) {
             if (Object.keys(allClassesData).length === 0) return { P: 0, A: 0, J: 0, total_students: 0, total_records: 0, tasa_asistencia: 'N/A' };
 
@@ -737,6 +670,68 @@
             classDetailsContainer.innerHTML = reportHTML;
         }
         
+        function attachTableListeners() {
+            // 1. Lógica de Asistencia
+            document.querySelectorAll('.attendance-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const status = e.target.dataset.status;
+                    if (students[index]) {
+                        students[index].attendance[currentDateString] = status;
+                        allClassesData[currentClass] = students;
+                        renderStudentsTable();
+                    }
+                });
+            });
+            
+            // 2. Lógica: Añadir Notas
+            document.querySelectorAll('.btn-grade').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const studentIndex = parseInt(e.target.dataset.index);
+                    const inputField = e.target.previousElementSibling; 
+                    const gradeValue = parseFloat(inputField.value);
+                    
+                    if (isNaN(gradeValue) || gradeValue < 1.0 || gradeValue > 7.0) {
+                        showMessage('Advertencia de Nota', 'Por favor, ingrese una nota válida entre 1.0 y 7.0.');
+                        return;
+                    }
+
+                    if (students[studentIndex]) {
+                        students[studentIndex].grades.push(gradeValue);
+                        allClassesData[currentClass] = students;
+                        inputField.value = '';
+                        renderStudentsTable();
+                        showMessage('Nota Registrada', `Nota ${gradeValue.toFixed(1)} registrada para ${students[studentIndex].name}. NO OLVIDE hacer clic en 'Guardar Datos' para hacerla permanente.`, false);
+                    }
+                });
+            });
+
+            // 3. Lógica: Eliminar Estudiante
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                 button.addEventListener('click', (e) => {
+                    const studentIndex = parseInt(e.target.dataset.index);
+                    const studentName = students[studentIndex].name;
+                    
+                    showMessage('Confirmar Eliminación', `¿Estás seguro de que quieres eliminar a ${studentName}? ESTO NO SE PUEDE DESHACER.`, true, (confirmed) => {
+                        if (confirmed) {
+                           students.splice(studentIndex, 1);
+                           allClassesData[currentClass] = students;
+                           renderStudentsTable();
+                           showMessage('Estudiante Eliminado', `${studentName} ha sido eliminado. Recuerda hacer clic en 'Guardar Datos'.`, false);
+                        }
+                    });
+                });
+            });
+
+            // 4. Lógica: Abrir Modal de Observaciones
+            document.querySelectorAll('.observation-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    openObservationModal(index);
+                });
+            });
+        }
+        
         function setupEventHandlers() { 
              saveDataBtn.addEventListener('click', saveData);
              showReportBtn.addEventListener('click', () => { generateClassReport(); });
@@ -745,9 +740,9 @@
              printReportBtn.addEventListener('click', () => window.print()); 
              addStudentBtn.addEventListener('click', addStudent);
 
-             // Manejadores para el modal de Observaciones
              closeObservationModalBtn.addEventListener('click', () => observationModal.style.display = 'none');
              saveObservationBtn.addEventListener('click', saveObservation);
+
 
              classSelector.addEventListener('change', (e) => {
                 currentClass = e.target.value;
